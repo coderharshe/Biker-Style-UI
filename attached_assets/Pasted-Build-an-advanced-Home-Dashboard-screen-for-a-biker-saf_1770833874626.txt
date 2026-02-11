@@ -1,0 +1,263 @@
+Build an advanced Home Dashboard screen for a biker safety and community mobile web app using React and Tailwind CSS.
+
+This screen should feel like a real-time biker command center with rich data panels, not just a map and buttons.
+
+Use:
+
+Dark theme biker UI
+
+Neon accent highlights (orange + blue)
+
+Glassmorphism cards
+
+Smooth micro animations
+
+Mobile-first layout
+
+No backend — use mock data and simulated updates using timers.
+
+📱 HOME SCREEN STRUCTURE (TOP TO BOTTOM)
+🔰 SECTION 1 — Smart Greeting + Ride Status Banner
+
+Show:
+
+User Name (Mock: “Harsh”)
+
+Time-based greeting (Good Morning / Evening logic)
+
+Ride Status Badge:
+
+Not Riding
+
+Active Ride
+
+Group Ride Active
+
+Today’s Ride Goal Progress:
+Example:
+32 KM / 80 KM Goal
+
+Mock Data Example:
+
+{
+  "user": "Harsh",
+  "rideStatus": "Active Ride",
+  "todayRideKM": 32,
+  "goalKM": 80
+}
+
+
+Add small animated progress bar.
+
+🌦 SECTION 2 — Ride Conditions Intelligence Card
+
+Show:
+
+Weather
+
+Temperature
+
+Wind Speed
+
+Road Risk Level (Low / Medium / High)
+
+Suggested Ride Time (e.g., “Best ride window: 6PM–9PM”)
+
+Mock Data:
+
+{
+  "weather": "Cloudy",
+  "temp": "18°C",
+  "wind": "12 km/h",
+  "roadRisk": "Low"
+}
+
+
+Add color coding:
+Low → Green
+Medium → Orange
+High → Red
+
+🗺 SECTION 3 — Live Rider Map (CORE VISUAL CENTERPIECE)
+
+Large Map Container.
+
+Simulate:
+
+User location marker (Blue glow)
+
+Nearby riders (Orange dots)
+
+SOS alert markers (Red flashing if active)
+
+Data to Show Over Map (Floating Chips):
+
+Nearby Riders Count
+
+Active SOS Alerts Nearby
+
+Group Rides Active
+
+Mock Example:
+
+{
+  "nearbyRiders": 12,
+  "activeSOS": 1,
+  "groupRides": 3
+}
+
+
+Animate markers moving slowly every few seconds.
+
+🚨 SECTION 4 — SOS QUICK ACTION PANEL
+
+Floating or sticky bottom center:
+
+Large Circular SOS Button with pulse animation.
+
+Below it show:
+
+Last SOS Response Time Avg
+
+Total Riders Available Now
+
+Mock:
+
+{
+  "avgResponseTime": "4 min",
+  "availableHelpers": 18
+}
+
+📊 SECTION 5 — Ride Analytics Mini Dashboard
+
+3 Small Cards:
+
+Card 1 — Weekly Ride Stats
+
+Total KM This Week
+
+Ride Hours
+
+Card 2 — Safety Score
+
+Calculate fake score based on:
+
+Speed control
+
+Night ride frequency
+
+Weather riding
+
+Example:
+Safety Score: 82 / 100
+
+Card 3 — Bike Health Status
+
+Next Service Due
+
+Tire Health %
+
+Fuel Efficiency Trend
+
+Mock:
+
+{
+  "weeklyKM": 214,
+  "rideHours": 9.5,
+  "safetyScore": 82,
+  "serviceDueKM": 450,
+  "tireHealth": 76
+}
+
+🎮 SECTION 6 — Gamification Quick Panel
+
+Show:
+
+XP Progress Bar
+
+Current Level Title (Road Warrior, Ride Captain etc)
+
+Today’s Active Missions (Max 3 visible)
+
+Example:
+• Ride 20 KM Today
+• Visit Hidden Spot
+• Help 1 Rider
+
+Mock:
+
+{
+  "xp": 1450,
+  "nextLevelXP": 2000,
+  "level": "Road Warrior"
+}
+
+👥 SECTION 7 — Community Pulse Feed (VERY IMPORTANT FOR REALISM)
+
+Scrolling horizontal cards:
+
+Show:
+
+Nearby Ride Starting Soon
+
+SOS Help Completed Nearby
+
+New Hidden Gem Added Nearby
+
+Top Rider of Day
+
+Mock Feed Example:
+
+[
+  "Group Ride starting 2km away",
+  "SOS resolved near Highway 48",
+  "Hidden Waterfall Spot discovered",
+  "Rider Alex reached Legend Level"
+]
+
+✨ MICRO INTERACTIONS REQUIRED
+
+Add:
+
+Map marker movement every 5 seconds
+
+XP bar smooth animation
+
+SOS button pulse loop
+
+Card hover glow effect
+
+Small number counter animation
+
+🎯 DESIGN FEEL TARGET
+
+The UI should feel like a mix of:
+
+Tesla Dashboard
+
+Gaming HUD
+
+Adventure Navigation System
+
+NOT like social media.
+
+❌ DO NOT ADD
+
+Backend APIs
+
+Real auth
+
+Payment
+
+Real maps if complex (use styled div placeholder if needed)
+
+🧱 MOCK DATA RULE
+
+Store all mock data in separate JSON or JS object files.
+
+Simulate real-time updates using setInterval.
+
+🎯 FINAL GOAL
+
+This Home Screen alone should make investors or judges believe:
+This app already has real users and real ride activity.

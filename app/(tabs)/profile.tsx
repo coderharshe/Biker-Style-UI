@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,24 +6,71 @@ import {
   ScrollView,
   Pressable,
   Platform,
-  Alert,
+  Dimensions,
+  ImageBackground,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withRepeat,
+  withSequence,
+  Easing,
+  FadeInDown,
+  FadeInRight
+} from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import Avatar from '@/components/Avatar';
-import XPBar from '@/components/XPBar';
-import StatCard from '@/components/StatCard';
-import BadgeItem from '@/components/BadgeItem';
 import { currentUser, badges } from '@/data/mockData';
+
+const { width: SCREEN_W } = Dimensions.get('window');
+
+// Titles based on rank
+const RANK_TITLES: { [key: number]: string } = {
+  1: 'SUPREME RIDER',
+  2: 'ELITE WARRIOR',
+  3: 'NIGHT GHOST',
+  4: 'ROAD COMMANDER',
+  5: 'PHANTOM LEAD',
+};
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const earnedBadges = badges.filter((b) => currentUser.badges.includes(b.id));
+
+  const scanLinePos = useSharedValue(0);
+  const glowOpacity = useSharedValue(0.4);
+
+  useEffect(() => {
+    scanLinePos.value = withRepeat(
+      withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
+    );
+    glowOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.8, { duration: 1500 }),
+        withTiming(0.4, { duration: 1500 })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const scanLineStyle = useAnimatedStyle(() => ({
+    top: `${scanLinePos.value * 100}%`,
+  }));
+
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+  }));
 
   const handleLogout = async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
@@ -31,64 +78,139 @@ export default function ProfileScreen() {
     router.replace('/login');
   };
 
+  const title = RANK_TITLES[currentUser.rank] || 'STREET RIDER';
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top + (Platform.OS === 'web' ? 67 : 0) }]}>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#0B0B0B', '#1a1a1a', '#0B0B0B']}
+        style={StyleSheet.absoluteFill}
+      />
+
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingBottom: 120 }]}
+        contentContainerStyle={[styles.scroll, {
+          paddingTop: insets.top + (Platform.OS === 'web' ? 20 : 10),
+          paddingBottom: 120
+        }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerSection}>
-          <Avatar initials={currentUser.avatar} size={80} color={Colors.dark.accent} />
-          <Text style={styles.userName}>{currentUser.name}</Text>
-          <View style={styles.bikeTypeRow}>
-            <Feather name="truck" size={14} color={Colors.dark.textSecondary} />
-            <Text style={styles.bikeType}>{currentUser.bikeType}</Text>
-          </View>
-          <View style={styles.levelBadge}>
-            <Feather name="star" size={14} color={Colors.dark.accent} />
-            <Text style={styles.levelText}>LEVEL {currentUser.level}</Text>
-          </View>
+        {/* Caller Card Section */}
+        <Animated.View entering={FadeInDown.duration(800)} style={styles.callerCardContainer}>
+          <ImageBackground
+            source={{ uri: 'https://images.unsplash.com/photo-1558981403-c5f91cbba527?q=80&w=2070&auto=format&fit=crop' }}
+            style={styles.callerCard}
+            imageStyle={styles.cardBackgroundImage}
+          >
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.8)', '#0B0B0B']}
+              style={StyleSheet.absoluteFill}
+            />
+
+            {/* Animated Scan Line */}
+            <Animated.View style={[styles.scanLine, scanLineStyle]} />
+
+            <View style={styles.cardContent}>
+              <View style={styles.cardHeader}>
+                <View style={styles.rankBadge}>
+                  <Text style={styles.rankNum}>#{currentUser.rank}</Text>
+                </View>
+                <View style={styles.titleFrame}>
+                  <Text style={styles.titleText}>{title}</Text>
+                </View>
+              </View>
+
+              <View style={styles.profileRow}>
+                <View style={styles.avatarContainer}>
+                  <View style={styles.avatarBorder}>
+                    <Avatar initials={currentUser.avatar} size={70} color={Colors.dark.accent} />
+                  </View>
+                  <View style={styles.levelTag}>
+                    <Text style={styles.levelTagText}>{currentUser.level}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.profileInfo}>
+                  <Text style={styles.userName}>{currentUser.name}</Text>
+                  <View style={styles.bikeTag}>
+                    <Feather name="zap" size={12} color={Colors.dark.accent} />
+                    <Text style={styles.bikeTagText}>{currentUser.bikeType.toUpperCase()} CLASS</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Progress Bar in Card */}
+              <View style={styles.cardXPContainer}>
+                <View style={styles.xpHeader}>
+                  <Text style={styles.xpLabel}>EXPERIENCE POINT</Text>
+                  <Text style={styles.xpValue}>{currentUser.xp} XP</Text>
+                </View>
+                <View style={styles.xpTrack}>
+                  <View style={[styles.xpFill, { width: '65%' }]}>
+                    <Animated.View style={[styles.xpGlow, glowStyle]} />
+                  </View>
+                </View>
+              </View>
+            </View>
+          </ImageBackground>
+        </Animated.View>
+
+        {/* Stats Grid */}
+        <View style={styles.statsGrid}>
+          <Animated.View entering={FadeInRight.delay(200)} style={styles.statBox}>
+            <Text style={styles.statLabel}>ALL TIME KM</Text>
+            <Text style={styles.statValue}>{currentUser.totalKm.toLocaleString()}</Text>
+            <View style={styles.statIconWrap}>
+              <Feather name="navigation" size={16} color={Colors.dark.accent} />
+            </View>
+          </Animated.View>
+
+          <Animated.View entering={FadeInRight.delay(300)} style={styles.statBox}>
+            <Text style={styles.statLabel}>SOS RESCUES</Text>
+            <Text style={styles.statValue}>{currentUser.sosHelps}</Text>
+            <View style={[styles.statIconWrap, { backgroundColor: Colors.dark.secondaryDim }]}>
+              <Feather name="shield" size={16} color={Colors.dark.secondary} />
+            </View>
+          </Animated.View>
         </View>
 
-        <GlassCard>
-          <XPBar current={currentUser.xp % 500} max={500} level={currentUser.level} />
-        </GlassCard>
-
-        <View style={styles.statsRow}>
-          <StatCard icon="navigation" label="Total KM" value={currentUser.totalKm.toLocaleString()} color={Colors.dark.accent} />
-          <StatCard icon="shield" label="SOS Helps" value={currentUser.sosHelps.toString()} color={Colors.dark.secondary} />
-          <StatCard icon="award" label="Badges" value={currentUser.badges.length.toString()} color={Colors.dark.success} />
-        </View>
-
+        {/* Badges Carousel Style */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>EARNED BADGES</Text>
-          <View style={styles.badgesGrid}>
-            {earnedBadges.map((badge) => (
-              <BadgeItem key={badge.id} badge={badge} />
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>COLLECTED BADGES</Text>
+            <Text style={styles.sectionCounter}>{earnedBadges.length}/{badges.length}</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesScroll}>
+            {earnedBadges.map((badge, idx) => (
+              <Animated.View key={badge.id} entering={FadeInRight.delay(400 + idx * 100)} style={styles.badgeCard}>
+                <View style={styles.badgeIconWrap}>
+                  <Feather name={badge.icon as any} size={24} color={Colors.dark.accent} />
+                </View>
+                <Text style={styles.badgeName}>{badge.name.toUpperCase()}</Text>
+              </Animated.View>
             ))}
-          </View>
+          </ScrollView>
         </View>
 
+        {/* Actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>SETTINGS</Text>
-          <GlassCard noPadding>
+          <Text style={styles.sectionTitle}>OPERATIONS</Text>
+          <GlassCard style={styles.actionCard} noPadding>
             {[
-              { icon: 'edit-3', label: 'Edit Profile' },
-              { icon: 'bell', label: 'Notifications' },
-              { icon: 'lock', label: 'Privacy' },
-              { icon: 'help-circle', label: 'Help & Support' },
+              { icon: 'settings', label: 'VEHICLE SETUP' },
+              { icon: 'bell', label: 'COMMS CENTER' },
+              { icon: 'share-2', label: 'SHARE PROFILE' },
             ].map((item, idx) => (
               <Pressable
                 key={item.label}
                 style={({ pressed }) => [
-                  styles.settingsItem,
-                  idx > 0 && styles.settingsBorder,
-                  pressed && { backgroundColor: Colors.dark.glass },
+                  styles.actionItem,
+                  idx > 0 && styles.itemBorder,
+                  pressed && { backgroundColor: 'rgba(255,255,255,0.05)' },
                 ]}
               >
-                <View style={styles.settingsLeft}>
-                  <Feather name={item.icon as any} size={18} color={Colors.dark.textSecondary} />
-                  <Text style={styles.settingsLabel}>{item.label}</Text>
+                <View style={styles.actionLeft}>
+                  <Feather name={item.icon as any} size={18} color={Colors.dark.accent} />
+                  <Text style={styles.actionLabel}>{item.label}</Text>
                 </View>
                 <Feather name="chevron-right" size={18} color={Colors.dark.textTertiary} />
               </Pressable>
@@ -97,11 +219,17 @@ export default function ProfileScreen() {
         </View>
 
         <Pressable
-          style={({ pressed }) => [styles.logoutBtn, pressed && { opacity: 0.8, transform: [{ scale: 0.97 }] }]}
+          style={({ pressed }) => [styles.logoutBtn, pressed && { opacity: 0.8 }]}
           onPress={handleLogout}
         >
+          <LinearGradient
+            colors={['rgba(255,59,48,0.2)', 'rgba(255,59,48,0.05)']}
+            style={StyleSheet.absoluteFill}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+          />
           <Feather name="log-out" size={18} color={Colors.dark.sos} />
-          <Text style={styles.logoutText}>SIGN OUT</Text>
+          <Text style={styles.logoutText}>TERMINATE SESSION</Text>
         </Pressable>
       </ScrollView>
     </View>
@@ -115,98 +243,286 @@ const styles = StyleSheet.create({
   },
   scroll: {
     paddingHorizontal: 16,
-    gap: 14,
+    gap: 20,
   },
-  headerSection: {
+  callerCardContainer: {
+    width: '100%',
+    height: 240,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    marginTop: 10,
+  },
+  callerCard: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'flex-end',
+  },
+  cardBackgroundImage: {
+    opacity: 0.6,
+  },
+  scanLine: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: Colors.dark.accent + '60',
+    zIndex: 2,
+    shadowColor: Colors.dark.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 5,
+  },
+  cardContent: {
+    zIndex: 5,
+    gap: 15,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 20,
-    paddingBottom: 4,
-    gap: 6,
+  },
+  rankBadge: {
+    backgroundColor: '#000',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: Colors.dark.accent,
+  },
+  rankNum: {
+    fontFamily: 'Rajdhani_700Bold',
+    fontSize: 16,
+    color: Colors.dark.accent,
+  },
+  titleFrame: {
+    backgroundColor: Colors.dark.accent,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 4,
+    transform: [{ skewX: '-15deg' }],
+  },
+  titleText: {
+    fontFamily: 'Rajdhani_700Bold',
+    fontSize: 12,
+    color: '#000',
+    transform: [{ skewX: '15deg' }],
+  },
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  avatarContainer: {
+    position: 'relative',
+  },
+  avatarBorder: {
+    padding: 3,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: Colors.dark.accent,
+    borderStyle: 'dashed',
+  },
+  levelTag: {
+    position: 'absolute',
+    bottom: -5,
+    right: -5,
+    backgroundColor: Colors.dark.accent,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#000',
+  },
+  levelTagText: {
+    fontFamily: 'Rajdhani_700Bold',
+    fontSize: 12,
+    color: '#000',
+  },
+  profileInfo: {
+    gap: 2,
   },
   userName: {
     fontFamily: 'Rajdhani_700Bold',
-    fontSize: 26,
+    fontSize: 28,
     color: Colors.dark.text,
     letterSpacing: 1,
-    marginTop: 8,
   },
-  bikeTypeRow: {
+  bikeTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
-  bikeType: {
-    fontFamily: 'Rajdhani_500Medium',
-    fontSize: 14,
-    color: Colors.dark.textSecondary,
-  },
-  levelBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.dark.accentDim,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 6,
-    marginTop: 4,
-  },
-  levelText: {
-    fontFamily: 'Rajdhani_700Bold',
-    fontSize: 12,
+  bikeTagText: {
+    fontFamily: 'Rajdhani_600SemiBold',
+    fontSize: 10,
     color: Colors.dark.accent,
+    letterSpacing: 1,
+  },
+  cardXPContainer: {
+    gap: 6,
+  },
+  xpHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  xpLabel: {
+    fontFamily: 'Rajdhani_700Bold',
+    fontSize: 10,
+    color: Colors.dark.textTertiary,
     letterSpacing: 2,
   },
-  statsRow: {
+  xpValue: {
+    fontFamily: 'Rajdhani_700Bold',
+    fontSize: 10,
+    color: Colors.dark.text,
+  },
+  xpTrack: {
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  xpFill: {
+    height: '100%',
+    backgroundColor: Colors.dark.accent,
+    borderRadius: 3,
+  },
+  xpGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#fff',
+  },
+  statsGrid: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
+  },
+  statBox: {
+    flex: 1,
+    backgroundColor: Colors.dark.card,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.dark.glassBorder,
+    gap: 4,
+  },
+  statLabel: {
+    fontFamily: 'Rajdhani_700Bold',
+    fontSize: 10,
+    color: Colors.dark.textTertiary,
+    letterSpacing: 1.5,
+  },
+  statValue: {
+    fontFamily: 'Rajdhani_700Bold',
+    fontSize: 22,
+    color: Colors.dark.text,
+  },
+  statIconWrap: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: Colors.dark.accentDim,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   section: {
-    gap: 10,
+    gap: 12,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   sectionTitle: {
     fontFamily: 'Rajdhani_700Bold',
     fontSize: 12,
-    color: Colors.dark.textTertiary,
-    letterSpacing: 2,
+    color: Colors.dark.textSecondary,
+    letterSpacing: 2.5,
   },
-  badgesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-    gap: 4,
+  sectionCounter: {
+    fontFamily: 'Rajdhani_700Bold',
+    fontSize: 12,
+    color: Colors.dark.accent,
   },
-  settingsItem: {
+  badgesScroll: {
+    gap: 10,
+    paddingRight: 20,
+  },
+  badgeCard: {
+    width: 100,
+    height: 100,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  badgeIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.dark.accentDim,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeName: {
+    fontFamily: 'Rajdhani_700Bold',
+    fontSize: 9,
+    color: Colors.dark.textSecondary,
+    textAlign: 'center',
+  },
+  actionCard: {
+    backgroundColor: Colors.dark.card,
+  },
+  actionItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 15,
   },
-  settingsBorder: {
+  itemBorder: {
     borderTopWidth: 1,
-    borderTopColor: Colors.dark.border,
+    borderTopColor: 'rgba(255,255,255,0.05)',
   },
-  settingsLeft: {
+  actionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
-  settingsLabel: {
-    fontFamily: 'Rajdhani_500Medium',
+  actionLabel: {
+    fontFamily: 'Rajdhani_600SemiBold',
     fontSize: 15,
     color: Colors.dark.text,
+    letterSpacing: 1,
   },
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.dark.sosDim,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.dark.sos + '20',
-    height: 50,
-    gap: 8,
-    marginTop: 4,
+    borderColor: 'rgba(255,59,48,0.3)',
+    height: 54,
+    gap: 10,
+    marginTop: 10,
+    overflow: 'hidden',
   },
   logoutText: {
     fontFamily: 'Rajdhani_700Bold',

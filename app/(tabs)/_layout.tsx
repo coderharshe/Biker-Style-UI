@@ -16,9 +16,9 @@ function NativeTabLayout() {
         <Icon sf={{ default: "house", selected: "house.fill" }} />
         <Label>Home</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="groups">
+      <NativeTabs.Trigger name="community">
         <Icon sf={{ default: "person.3", selected: "person.3.fill" }} />
-        <Label>Groups</Label>
+        <Label>Community</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="tasks">
         <Icon sf={{ default: "target", selected: "target" }} />
@@ -87,9 +87,9 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="groups"
+        name="community"
         options={{
-          title: "Groups",
+          title: "Community",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="people" size={size} color={color} />
           ),

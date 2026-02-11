@@ -8,10 +8,19 @@ import {
   Pressable,
   FlatList,
   Dimensions,
+  Linking,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
+let MapView: any, Marker: any, Polyline: any, PROVIDER_GOOGLE: any;
+if (Platform.OS !== 'web') {
+  const Maps = require('react-native-maps');
+  MapView = Maps.default;
+  Marker = Maps.Marker;
+  Polyline = Maps.Polyline;
+  PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE;
+}
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -27,6 +36,7 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import SOSButton from '@/components/SOSButton';
+import DestinationPicker, { Destination } from '@/components/DestinationPicker';
 import { currentUser, dashboardData } from '@/data/mockData';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -41,6 +51,41 @@ function getGreeting(): string {
 }
 
 const RISK_COLORS = { Low: Colors.dark.success, Medium: Colors.dark.accent, High: Colors.dark.sos } as const;
+
+const mapStyle = [
+  {
+    "elementType": "geometry",
+    "stylers": [{ "color": "#0D1117" }]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#526783" }]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [{ "color": "#0D1117" }]
+  },
+  {
+    "featureType": "administrative",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#30363D" }]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#21262D" }]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry.stroke",
+    "stylers": [{ "color": "#30363D" }]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#000814" }]
+  }
+];
 
 function AnimatedCounter({ target, suffix = '', prefix = '' }: { target: number; suffix?: string; prefix?: string }) {
   const [display, setDisplay] = useState(0);
@@ -224,6 +269,20 @@ export default function HomeScreen() {
   const d = dashboardData;
   const goalProgress = useSharedValue(0);
 
+  const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
+  const [showPicker, setShowPicker] = useState(false);
+  const mapRef = useRef<any>(null);
+
+  const handleStartNavigation = () => {
+    if (!selectedDestination) return;
+    const url = Platform.select({
+      ios: `maps://app?daddr=${selectedDestination.latitude},${selectedDestination.longitude}`,
+      android: `google.navigation:q=${selectedDestination.latitude},${selectedDestination.longitude}`,
+      web: `https://www.google.com/maps/dir/?api=1&destination=${selectedDestination.latitude},${selectedDestination.longitude}`
+    });
+    if (url) Linking.openURL(url);
+  };
+
   useEffect(() => {
     goalProgress.value = withTiming(d.todayRideKM / d.goalKM, { duration: 1200, easing: Easing.out(Easing.cubic) });
   }, []);
@@ -323,26 +382,114 @@ export default function HomeScreen() {
 
         <GlassCard style={{ padding: 0 }} noPadding>
           <View style={styles.mapContainer}>
-            <View style={styles.mapPlaceholder}>
-              <View style={styles.mapGrid}>
-                {[...Array(20)].map((_, i) => (
-                  <View key={`v${i}`} style={[styles.mapGridLine, { left: `${(i + 1) * 5}%` }]} />
+            {Platform.OS === 'web' ? (
+              <View style={[styles.mapPlaceholder, { backgroundColor: '#0D1117' }]}>
+                <View style={styles.mapGrid}>
+                  {[...Array(20)].map((_, i) => (
+                    <View key={`v${i}`} style={[styles.mapGridLine, { left: `${(i + 1) * 5}%` }]} />
+                  ))}
+                  {[...Array(14)].map((_, i) => (
+                    <View key={`h${i}`} style={[styles.mapGridLineH, { top: `${(i + 1) * 7}%` }]} />
+                  ))}
+                </View>
+                <View style={styles.mapRoadH} />
+                <View style={styles.mapRoadV} />
+                <View style={styles.mapRoadD} />
+
+                {d.mapData.riderPositions.map((pos, i) => (
+                  <View
+                    key={pos.id}
+                    style={[styles.mapMarker, { top: `${pos.top}%`, left: `${pos.left}%` }]}
+                  >
+                    <MapMarker position={pos} isUser={pos.isUser} isSOS={pos.isSOS} index={i} />
+                  </View>
                 ))}
-                {[...Array(14)].map((_, i) => (
-                  <View key={`h${i}`} style={[styles.mapGridLineH, { top: `${(i + 1) * 7}%` }]} />
-                ))}
+
+                {selectedDestination && (
+                  <View style={[styles.mapMarker, {
+                    top: `${50 + (selectedDestination.latitude - 34.1642) * 200}%`,
+                    left: `${50 + (selectedDestination.longitude - 77.5848) * 200}%`
+                  }]}>
+                    <View style={styles.destMarker}>
+                      <Feather name="map-pin" size={20} color={Colors.dark.accent} />
+                    </View>
+                  </View>
+                )}
               </View>
-              <View style={styles.mapRoadH} />
-              <View style={styles.mapRoadV} />
-              <View style={styles.mapRoadD} />
-              {d.mapData.riderPositions.map((pos, i) => (
-                <MapMarker key={pos.id} position={pos} isUser={pos.isUser} isSOS={pos.isSOS} index={i} />
-              ))}
+            ) : (
+              <MapView
+                ref={mapRef}
+                provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
+                style={StyleSheet.absoluteFill}
+                initialRegion={{
+                  latitude: 34.1642,
+                  longitude: 77.5848,
+                  latitudeDelta: 0.05,
+                  longitudeDelta: 0.05,
+                }}
+                customMapStyle={mapStyle}
+              >
+                {d.mapData.riderPositions.map((pos: any, i: number) => (
+                  <Marker
+                    key={pos.id}
+                    coordinate={{
+                      latitude: 34.1642 + (pos.top - 50) * 0.001,
+                      longitude: 77.5848 + (pos.left - 50) * 0.001
+                    }}
+                  >
+                    <MapMarker position={pos} isUser={pos.isUser} isSOS={pos.isSOS} index={i} />
+                  </Marker>
+                ))}
+
+                {selectedDestination && (
+                  <>
+                    <Marker
+                      coordinate={{ latitude: selectedDestination.latitude, longitude: selectedDestination.longitude }}
+                      title={selectedDestination.name}
+                    >
+                      <View style={styles.destMarker}>
+                        <Feather name="map-pin" size={20} color={Colors.dark.accent} />
+                      </View>
+                    </Marker>
+                    <Polyline
+                      coordinates={[
+                        { latitude: 34.1642, longitude: 77.5848 }, // Current user pos (mocked)
+                        { latitude: selectedDestination.latitude, longitude: selectedDestination.longitude }
+                      ]}
+                      strokeColor={Colors.dark.accent}
+                      strokeWidth={3}
+                      lineDashPattern={[5, 5]}
+                    />
+                  </>
+                )}
+              </MapView>
+            )}
+
+            <View style={styles.mapOverlay}>
               <View style={styles.chipRow}>
                 <FloatingChip icon="users" label="Riders" value={d.mapData.nearbyRiders} color={Colors.dark.accent} delay={200} />
                 <FloatingChip icon="alert-triangle" label="SOS" value={d.mapData.activeSOS} color={Colors.dark.sos} delay={400} />
                 <FloatingChip icon="navigation" label="Rides" value={d.mapData.groupRidesActive} color={Colors.dark.secondary} delay={600} />
               </View>
+
+              <Pressable
+                style={styles.searchTrigger}
+                onPress={() => setShowPicker(true)}
+              >
+                <Feather name="search" size={16} color={Colors.dark.accent} />
+                <Text style={styles.searchText}>{selectedDestination ? selectedDestination.name : 'Where to?'}</Text>
+              </Pressable>
+
+              {selectedDestination && (
+                <Pressable
+                  style={styles.navButton}
+                  onPress={handleStartNavigation}
+                >
+                  <Feather name="navigation" size={18} color="#000" />
+                  <Text style={styles.navButtonText}>START</Text>
+                </Pressable>
+              )}
+
               <View style={styles.mapLabel}>
                 <View style={styles.mapLabelLive} />
                 <Text style={styles.mapLabelText}>LIVE</Text>
@@ -350,6 +497,22 @@ export default function HomeScreen() {
             </View>
           </View>
         </GlassCard>
+
+        {showPicker && (
+          <DestinationPicker
+            onSelect={(dest) => {
+              setSelectedDestination(dest);
+              setShowPicker(false);
+              mapRef.current?.animateToRegion({
+                latitude: (34.1642 + dest.latitude) / 2,
+                longitude: (77.5848 + dest.longitude) / 2,
+                latitudeDelta: Math.abs(34.1642 - dest.latitude) * 2,
+                longitudeDelta: Math.abs(77.5848 - dest.longitude) * 2,
+              });
+            }}
+            onClose={() => setShowPicker(false)}
+          />
+        )}
 
         <View style={styles.sosSection}>
           <View style={styles.sosCenter}>
@@ -475,6 +638,23 @@ export default function HomeScreen() {
       <View style={styles.sosFloat}>
         <View style={styles.sosFloatInner} />
       </View>
+
+      {/* Side Button for Groups */}
+      <View style={styles.sideActions}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.sideBtn,
+            pressed && { transform: [{ scale: 0.95 }] }
+          ]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push('/groups');
+          }}
+        >
+          <Feather name="users" size={20} color="#000" />
+        </Pressable>
+        <Text style={styles.sideBtnLabel}>GROUPS</Text>
+      </View>
     </View>
   );
 }
@@ -487,6 +667,40 @@ const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: 16,
     gap: 14,
+  },
+
+  sideActions: {
+    position: 'absolute',
+    right: 0,
+    top: '35%',
+    alignItems: 'center',
+    gap: 4,
+    zIndex: 100,
+  },
+  sideBtn: {
+    width: 48,
+    height: 48,
+    backgroundColor: Colors.dark.accent,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.dark.accent,
+    shadowOffset: { width: -2, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  sideBtnLabel: {
+    fontFamily: 'Rajdhani_700Bold',
+    fontSize: 9,
+    color: Colors.dark.accent,
+    letterSpacing: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    overflow: 'hidden',
   },
 
   greetingSection: {
@@ -823,6 +1037,64 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: Colors.dark.sos,
     letterSpacing: 2,
+  },
+  mapOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'transparent',
+    pointerEvents: 'box-none',
+  },
+  searchTrigger: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(11,11,11,0.85)',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  searchText: {
+    fontFamily: 'Rajdhani_500Medium',
+    fontSize: 14,
+    color: Colors.dark.textSecondary,
+  },
+  destMarker: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(11,11,11,0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.dark.accent,
+  },
+  navButton: {
+    position: 'absolute',
+    bottom: 60,
+    right: 12,
+    backgroundColor: Colors.dark.accent,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    shadowColor: Colors.dark.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  navButtonText: {
+    fontFamily: 'Rajdhani_700Bold',
+    fontSize: 14,
+    color: '#000',
+    letterSpacing: 1,
   },
 
   sosSection: {

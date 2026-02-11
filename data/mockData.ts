@@ -208,6 +208,28 @@ export interface DashboardData {
   communityFeed: { id: string; text: string; icon: string; time: string; color: string }[];
 }
 
+export interface CommunityPost {
+  id: string;
+  author: string;
+  handle: string;
+  avatar: string;
+  content: string;
+  image?: string;
+  timestamp: string;
+  likes: number;
+  comments: number;
+  reposts: number;
+  isLiked?: boolean;
+  rideStats?: {
+    distance: string;
+    duration: string;
+    fuelEconomy: string;
+    topSpeed: string;
+    avgSpeed: string;
+    startTime: string;
+  };
+}
+
 export const dashboardData: DashboardData = {
   rideStatus: 'Active Ride',
   todayRideKM: 32,
@@ -268,3 +290,76 @@ export const dashboardData: DashboardData = {
     { id: '6', text: 'New trail mapped: Canyon Ridge', icon: 'compass', time: '45m ago', color: '#00B4FF' },
   ],
 };
+
+export const communityPosts: CommunityPost[] = [
+  {
+    id: 'ride_1',
+    author: 'Ghost Rider',
+    handle: '@ghost_rider_01',
+    avatar: 'GR',
+    content: 'Sunday morning city blast! 🏍️💨 50km of pure urban exploration. The bike felt sharp and the fuel economy was surprisingly good despite the traffic. #CityRide #50KClub',
+    image: 'file:///C:/Users/operator/.gemini/antigravity/brain/64d57b3c-3a8a-4e9c-b82c-e37837c02e9d/strava_style_city_ride_map_v2_1770839406799.png',
+    timestamp: '30m',
+    likes: 42,
+    comments: 5,
+    reposts: 3,
+    rideStats: {
+      distance: '50.2 km',
+      duration: '1h 12m',
+      fuelEconomy: '38.5 km/l',
+      topSpeed: '112 km/h',
+      avgSpeed: '42 km/h',
+      startTime: '06:30 AM',
+    },
+    isLiked: false,
+  },
+  {
+    id: '1',
+    author: 'Thunder',
+    handle: '@thunder_rides',
+    avatar: 'TH',
+    content: 'Just reached the top of Khardung La! The view is absolutely insane today. Bike is holding up well, but the air is thin. 🏔️🏍️ #LehDiaries #RideHard',
+    image: 'https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=1000&auto=format&fit=crop',
+    timestamp: '2h',
+    likes: 124,
+    comments: 18,
+    reposts: 5,
+    isLiked: true,
+  },
+  {
+    id: '2',
+    author: 'Viper',
+    handle: '@viper_adv',
+    avatar: 'VP',
+    content: 'Nothing beats a solo sunset cruise through the canyon. The road was empty and the engine purring. This is why we ride. ✨',
+    image: 'https://images.unsplash.com/photo-1471466054146-e71bcc0d2bb2?q=80&w=1000&auto=format&fit=crop',
+    timestamp: '4h',
+    likes: 89,
+    comments: 7,
+    reposts: 2,
+  },
+  {
+    id: '3',
+    author: 'Ghost Rider',
+    handle: '@ghost_rider_01',
+    avatar: 'GR',
+    content: 'Quick pit stop before the night run. Anyone joining from the gas station on Route 66? ⛽🌌',
+    timestamp: '1h',
+    likes: 56,
+    comments: 12,
+    reposts: 8,
+    isLiked: false,
+  },
+  {
+    id: '4',
+    author: 'Blaze',
+    handle: '@blaze_sport',
+    avatar: 'BZ',
+    content: 'Testing out the new tires on some twisties. The grip is phenomenal! Full review coming soon to the VLOG. 💨🔥',
+    image: 'https://images.unsplash.com/photo-1525160354320-d8e92641c563?q=80&w=1000&auto=format&fit=crop',
+    timestamp: '6h',
+    likes: 210,
+    comments: 45,
+    reposts: 15,
+  },
+];

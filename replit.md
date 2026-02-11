@@ -20,8 +20,19 @@ Preferred communication style: Simple, everyday language.
 ### App Screen Structure
 - `/` - Splash screen with auto-redirect (checks AsyncStorage for logged-in user)
 - `/login` - Login/signup with email, password, bike type selection (stored in AsyncStorage, no real auth)
-- `/(tabs)/` - Main tab navigator: Home, Groups, Tasks, Leaderboard, Profile
+- `/(tabs)/` - Main tab navigator: Home (Advanced Dashboard), Groups, Tasks, Leaderboard, Profile
 - `/sos` - Emergency SOS modal screen with pulsing animations
+
+### Home Dashboard (Advanced - 7 Sections)
+1. **Smart Greeting + Ride Status Banner** - Time-based greeting, user name, ride status badge (Active/Group/Not Riding), today's ride goal progress bar (KM tracker)
+2. **Ride Conditions Intelligence** - Weather, temp, wind, humidity, road risk level (Low/Med/High color-coded), suggested ride time window
+3. **Live Rider Map** - Dark styled map with animated rider markers (blue user, orange riders, red SOS), floating stat chips, "LIVE" indicator, markers drift with reanimated
+4. **SOS Quick Action Panel** - Pulse-animated SOS button, avg response time, available helpers count
+5. **Ride Analytics** - Weekly KM + hours card, safety score with mini bar, bike health (tire %, service due, fuel efficiency)
+6. **Gamification** - XP progress bar with glow, level title, today's missions with completion state
+7. **Community Pulse Feed** - Horizontal scrolling cards with live community events and timestamps
+- Uses `dashboardData` from `data/mockData.ts` for all section data
+- Animated counters, map marker drift, XP bar glow, and floating chip entrance animations
 
 ### Backend (Express)
 - **Runtime**: Node.js with Express 5, TypeScript compiled via tsx (dev) or esbuild (prod)

@@ -27,7 +27,9 @@ import * as Haptics from 'expo-haptics';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import SOSButton from '@/components/SOSButton';
-import { currentUser, dashboardData } from '@/data/mockData';
+import { dashboardData, sosHelpers, currentUser } from '@/data/mockData';
+import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from '@/components/MapLib';
+import { mapStyle } from '@/components/CustomMapStyle';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -62,94 +64,7 @@ function AnimatedCounter({ target, suffix = '', prefix = '' }: { target: number;
   return <Text style={styles.counterText}>{prefix}{display}{suffix}</Text>;
 }
 
-function MapMarker({ position, isUser, isSOS, index }: {
-  position: { top: number; left: number };
-  isUser?: boolean;
-  isSOS?: boolean;
-  index: number;
-}) {
-  const offsetX = useSharedValue(0);
-  const offsetY = useSharedValue(0);
-  const pulse = useSharedValue(1);
-  const pulseOp = useSharedValue(0.6);
 
-  useEffect(() => {
-    if (isUser) {
-      pulse.value = withRepeat(
-        withTiming(1.8, { duration: 2000, easing: Easing.out(Easing.ease) }),
-        -1, false
-      );
-      pulseOp.value = withRepeat(
-        withTiming(0, { duration: 2000, easing: Easing.out(Easing.ease) }),
-        -1, false
-      );
-    } else if (isSOS) {
-      pulse.value = withRepeat(
-        withSequence(
-          withTiming(1.5, { duration: 600 }),
-          withTiming(1, { duration: 600 })
-        ), -1, false
-      );
-      pulseOp.value = withRepeat(
-        withSequence(
-          withTiming(0.8, { duration: 600 }),
-          withTiming(0.2, { duration: 600 })
-        ), -1, false
-      );
-    } else {
-      offsetX.value = withRepeat(
-        withDelay(index * 400,
-          withSequence(
-            withTiming(Math.random() * 6 - 3, { duration: 3000 + index * 500, easing: Easing.inOut(Easing.ease) }),
-            withTiming(Math.random() * 6 - 3, { duration: 3000 + index * 500, easing: Easing.inOut(Easing.ease) })
-          )
-        ), -1, true
-      );
-      offsetY.value = withRepeat(
-        withDelay(index * 300,
-          withSequence(
-            withTiming(Math.random() * 6 - 3, { duration: 2500 + index * 600, easing: Easing.inOut(Easing.ease) }),
-            withTiming(Math.random() * 6 - 3, { duration: 2500 + index * 600, easing: Easing.inOut(Easing.ease) })
-          )
-        ), -1, true
-      );
-    }
-  }, []);
-
-  const markerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: offsetX.value }, { translateY: offsetY.value }],
-  }));
-
-  const pulseStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulse.value }],
-    opacity: pulseOp.value,
-  }));
-
-  const dotColor = isUser ? Colors.dark.secondary : isSOS ? Colors.dark.sos : Colors.dark.accent;
-  const dotSize = isUser ? 14 : isSOS ? 12 : 10;
-
-  return (
-    <Animated.View style={[
-      styles.mapMarker,
-      { top: `${position.top}%`, left: `${position.left}%` },
-      markerStyle
-    ]}>
-      {(isUser || isSOS) && (
-        <Animated.View style={[
-          styles.markerPulseRing,
-          { width: dotSize * 2.5, height: dotSize * 2.5, borderRadius: dotSize * 1.25, backgroundColor: dotColor + '40' },
-          pulseStyle
-        ]} />
-      )}
-      <View style={[
-        styles.markerDot,
-        { width: dotSize, height: dotSize, borderRadius: dotSize / 2, backgroundColor: dotColor },
-        isUser && styles.markerGlow,
-        isSOS && styles.markerSOSGlow,
-      ]} />
-    </Animated.View>
-  );
-}
 
 function FloatingChip({ icon, label, value, color, delay }: {
   icon: string; label: string; value: string | number; color: string; delay: number;
@@ -324,29 +239,72 @@ export default function HomeScreen() {
         <GlassCard style={{ padding: 0 }} noPadding>
           <View style={styles.mapContainer}>
             <View style={styles.mapPlaceholder}>
-              <View style={styles.mapGrid}>
-                {[...Array(20)].map((_, i) => (
-                  <View key={`v${i}`} style={[styles.mapGridLine, { left: `${(i + 1) * 5}%` }]} />
+
+              <MapView
+                provider={PROVIDER_GOOGLE}
+                style={styles.map}
+                customMapStyle={mapStyle}
+                initialRegion={{
+                  latitude: 37.78825,
+                  longitude: -122.4324,
+                  latitudeDelta: 0.015,
+                  longitudeDelta: 0.0121,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                rotateEnabled={false}
+                pitchEnabled={false}
+              >
+                <Polyline
+                  coordinates={[
+                    { latitude: 37.78825, longitude: -122.4324 },
+                    { latitude: 37.78925, longitude: -122.4344 },
+                    { latitude: 37.79025, longitude: -122.4364 },
+                  ]}
+                  strokeColor={Colors.dark.accent}
+                  strokeWidth={4}
+                />
+
+                {d.mapData.riderPositions.map((pos, i) => (
+                  <Marker
+                    key={pos.id}
+                    coordinate={{
+                      latitude: 37.78825 + (pos.top - 50) * 0.0001,
+                      longitude: -122.4324 + (pos.left - 50) * 0.0001,
+                    }}
+                  >
+                    <View style={[
+                      styles.markerDot,
+                      {
+                        width: pos.isUser ? 14 : pos.isSOS ? 12 : 10,
+                        height: pos.isUser ? 14 : pos.isSOS ? 12 : 10,
+                        borderRadius: (pos.isUser ? 14 : pos.isSOS ? 12 : 10) / 2,
+                        backgroundColor: pos.isUser ? Colors.dark.secondary : pos.isSOS ? Colors.dark.sos : Colors.dark.accent,
+                        borderColor: '#0D1117',
+                        borderWidth: 2
+                      }
+                    ]} />
+                  </Marker>
                 ))}
-                {[...Array(14)].map((_, i) => (
-                  <View key={`h${i}`} style={[styles.mapGridLineH, { top: `${(i + 1) * 7}%` }]} />
-                ))}
-              </View>
-              <View style={styles.mapRoadH} />
-              <View style={styles.mapRoadV} />
-              <View style={styles.mapRoadD} />
-              {d.mapData.riderPositions.map((pos, i) => (
-                <MapMarker key={pos.id} position={pos} isUser={pos.isUser} isSOS={pos.isSOS} index={i} />
-              ))}
+              </MapView>
+
               <View style={styles.chipRow}>
                 <FloatingChip icon="users" label="Riders" value={d.mapData.nearbyRiders} color={Colors.dark.accent} delay={200} />
                 <FloatingChip icon="alert-triangle" label="SOS" value={d.mapData.activeSOS} color={Colors.dark.sos} delay={400} />
                 <FloatingChip icon="navigation" label="Rides" value={d.mapData.groupRidesActive} color={Colors.dark.secondary} delay={600} />
               </View>
+
               <View style={styles.mapLabel}>
                 <View style={styles.mapLabelLive} />
                 <Text style={styles.mapLabelText}>LIVE</Text>
               </View>
+
+              <Pressable
+                style={({ pressed }) => [styles.fullScreenBtn, pressed && { opacity: 0.8, transform: [{ scale: 0.96 }] }]}
+                onPress={() => router.push('/map')}
+              >
+                <Feather name="maximize-2" size={16} color={Colors.dark.text} />
+              </Pressable>
             </View>
           </View>
         </GlassCard>
@@ -684,10 +642,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
   },
-  mapPlaceholder: {
-    flex: 1,
-    backgroundColor: '#0D1117',
-    position: 'relative',
+  map: {
+    ...StyleSheet.absoluteFillObject,
   },
   mapGrid: {
     ...StyleSheet.absoluteFillObject,
@@ -706,33 +662,49 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: 'rgba(255,255,255,0.04)',
   },
-  mapRoadH: {
+  mapRoadMain: {
     position: 'absolute',
-    top: '45%',
-    left: 0,
-    right: 0,
-    height: 3,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 2,
-  },
-  mapRoadV: {
-    position: 'absolute',
-    left: '50%',
     top: 0,
     bottom: 0,
-    width: 3,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 2,
+    left: '48%',
+    width: 12,
+    backgroundColor: '#2C3036',
+    borderRadius: 6,
   },
-  mapRoadD: {
+  mapRoadSec: {
     position: 'absolute',
-    top: '20%',
-    left: '15%',
-    width: '60%',
-    height: 2,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 1,
-    transform: [{ rotate: '25deg' }],
+    top: '40%',
+    left: 0,
+    right: 0,
+    height: 8,
+    backgroundColor: '#2C3036',
+  },
+  routeLine: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: '49.5%',
+    width: 4,
+    backgroundColor: Colors.dark.accent,
+    opacity: 0.8,
+  },
+  fullScreenBtn: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: 'rgba(20,20,20,0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   mapMarker: {
     position: 'absolute',

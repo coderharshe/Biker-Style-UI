@@ -1,0 +1,179 @@
+Build a frontend-only mobile-first web app for a biker community and safety platform.
+
+Tech Requirements:
+
+Use React + Tailwind CSS
+
+Dark theme default
+
+Modern glassmorphism + neon accent UI
+
+No backend
+
+Use mock data and local state
+
+Mobile responsive (primary target mobile screen)
+
+App Concept:
+This app connects bikers, allows group ride coordination, real-time location simulation, SOS emergency alerts, and gamified exploration tasks.
+
+Color Theme:
+
+Background: #0B0B0B or similar dark
+
+Primary Accent: Neon Orange
+
+Secondary Accent: Electric Blue
+
+SOS Color: Red (#FF3B30)
+
+Text: White / Light Grey
+
+Navigation:
+Bottom Tab Navigation with 5 tabs:
+Home | Groups | Tasks | Leaderboard | Profile
+
+FEATURES TO BUILD
+1. Splash Screen
+
+App logo center
+
+Tagline: Ride Together. Stay Protected.
+
+Fake loading animation
+
+Auto navigate to login after 2 seconds
+
+2. Login / Signup
+
+Email + Password fields
+
+Google login button (UI only)
+
+Bike Type dropdown (Sport, Cruiser, ADV, etc)
+
+Login stores fake user in local storage
+
+3. Home Dashboard
+
+Must Include:
+
+Greeting header
+
+Weather card (mock data)
+
+Large Map container (use placeholder map or Mapbox if easy)
+
+Animated rider markers (simulate movement with timer)
+
+Large floating SOS button center bottom
+
+Nearby riders count card
+
+Active rides card
+
+XP progress mini card
+
+SOS Button Action:
+
+Opens SOS Screen
+
+4. SOS Screen
+
+Design:
+
+Red gradient overlay
+
+Big text: Emergency Alert Sent
+
+Show mock nearby helpers list
+
+Show ETA and distance
+
+Cancel SOS button
+
+5. Group Ride Screen
+
+Create Group button
+
+Nearby Groups list
+
+Group Ride Map container
+
+Member avatars row
+
+Group chat UI (frontend only)
+
+6. Tasks / Gamification Screen
+
+Show:
+
+XP Progress bar
+
+Daily missions list
+
+Completed tasks checkmarks
+
+Badge collection grid
+
+Claim reward button animation
+
+Example Tasks:
+
+Visit Hidden Location
+
+Help Rider via SOS
+
+Ride 100 KM
+
+Night Ride Challenge
+
+7. Leaderboard Screen
+
+Top riders list
+
+Rank, XP, Badge count
+
+Highlight current user
+
+8. Profile Screen
+
+Show:
+
+User avatar
+
+Rider level
+
+Total KM ridden
+
+SOS helps given
+
+Badge showcase
+
+Edit profile button (UI only)
+
+EXTRA FRONTEND DETAILS
+
+Animations:
+
+Smooth transitions
+
+SOS pulse animation
+
+XP bar animation
+
+Map marker movement loop
+
+Data:
+Use mock JSON objects.
+
+Do NOT:
+
+Add backend
+
+Add authentication APIs
+
+Add payment systems
+
+Goal:
+Make UI look like production biker safety + community app demo ready for pitch presentation.

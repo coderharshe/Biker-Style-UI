@@ -248,15 +248,13 @@ export const dashboardData: DashboardData = {
     activeSOS: 1,
     groupRidesActive: 3,
     riderPositions: [
-      { id: 'user', top: 42, left: 48, isUser: true },
-      { id: 'r1', top: 28, left: 32 },
-      { id: 'r2', top: 55, left: 68 },
-      { id: 'r3', top: 35, left: 72 },
-      { id: 'r4', top: 62, left: 25 },
-      { id: 'r5', top: 18, left: 55 },
-      { id: 'r6', top: 70, left: 45 },
-      { id: 'r7', top: 48, left: 82 },
-      { id: 'sos1', top: 22, left: 78, isSOS: true },
+      { id: 'user', top: 50, left: 50, isUser: true },
+      { id: 'r1', top: 46, left: 46 }, // Behind user
+      { id: 'r2', top: 42, left: 42 },
+      { id: 'r3', top: 38, left: 38 },
+      { id: 'r4', top: 34, left: 34 },
+      { id: 'r5', top: 30, left: 30 },
+      { id: 'sos1', top: 20, left: 15, isSOS: true }, // SOS far away
     ],
   },
   sosPanel: {

@@ -18,6 +18,9 @@
       "bundleIdentifier": "com.myapp",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby riders and navigate to destinations."
+      },
+      "config": {
+        "googleMapsApiKey": "YOUR_IOS_API_KEY_HERE"
       }
     },
     "android": {
@@ -26,6 +29,11 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
       ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_ANDROID_API_KEY_HERE"
+        }
+      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

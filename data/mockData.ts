@@ -167,3 +167,104 @@ export const weatherData = {
   humidity: '45%',
   icon: 'sun',
 };
+
+export interface DashboardData {
+  rideStatus: 'Not Riding' | 'Active Ride' | 'Group Ride Active';
+  todayRideKM: number;
+  goalKM: number;
+  rideConditions: {
+    weather: string;
+    temp: string;
+    wind: string;
+    roadRisk: 'Low' | 'Medium' | 'High';
+    suggestedTime: string;
+    humidity: string;
+    icon: string;
+  };
+  mapData: {
+    nearbyRiders: number;
+    activeSOS: number;
+    groupRidesActive: number;
+    riderPositions: { id: string; top: number; left: number; isUser?: boolean; isSOS?: boolean }[];
+  };
+  sosPanel: {
+    avgResponseTime: string;
+    availableHelpers: number;
+  };
+  analytics: {
+    weeklyKM: number;
+    rideHours: number;
+    safetyScore: number;
+    serviceDueKM: number;
+    tireHealth: number;
+    fuelEfficiency: string;
+  };
+  gamification: {
+    xp: number;
+    nextLevelXP: number;
+    levelTitle: string;
+    todayMissions: { title: string; icon: string; xp: number; done: boolean }[];
+  };
+  communityFeed: { id: string; text: string; icon: string; time: string; color: string }[];
+}
+
+export const dashboardData: DashboardData = {
+  rideStatus: 'Active Ride',
+  todayRideKM: 32,
+  goalKM: 80,
+  rideConditions: {
+    weather: 'Cloudy',
+    temp: '18',
+    wind: '12 km/h',
+    roadRisk: 'Low',
+    suggestedTime: '6 PM - 9 PM',
+    humidity: '52%',
+    icon: 'cloud',
+  },
+  mapData: {
+    nearbyRiders: 12,
+    activeSOS: 1,
+    groupRidesActive: 3,
+    riderPositions: [
+      { id: 'user', top: 42, left: 48, isUser: true },
+      { id: 'r1', top: 28, left: 32 },
+      { id: 'r2', top: 55, left: 68 },
+      { id: 'r3', top: 35, left: 72 },
+      { id: 'r4', top: 62, left: 25 },
+      { id: 'r5', top: 18, left: 55 },
+      { id: 'r6', top: 70, left: 45 },
+      { id: 'r7', top: 48, left: 82 },
+      { id: 'sos1', top: 22, left: 78, isSOS: true },
+    ],
+  },
+  sosPanel: {
+    avgResponseTime: '4 min',
+    availableHelpers: 18,
+  },
+  analytics: {
+    weeklyKM: 214,
+    rideHours: 9.5,
+    safetyScore: 82,
+    serviceDueKM: 450,
+    tireHealth: 76,
+    fuelEfficiency: '32 km/l',
+  },
+  gamification: {
+    xp: 1450,
+    nextLevelXP: 2000,
+    levelTitle: 'Road Warrior',
+    todayMissions: [
+      { title: 'Ride 20 KM Today', icon: 'navigation', xp: 100, done: false },
+      { title: 'Visit Hidden Spot', icon: 'map-pin', xp: 150, done: false },
+      { title: 'Help 1 Rider', icon: 'shield', xp: 200, done: true },
+    ],
+  },
+  communityFeed: [
+    { id: '1', text: 'Group Ride starting 2km away', icon: 'users', time: '2m ago', color: '#00B4FF' },
+    { id: '2', text: 'SOS resolved near Highway 48', icon: 'check-circle', time: '8m ago', color: '#34C759' },
+    { id: '3', text: 'Hidden Waterfall Spot discovered', icon: 'map-pin', time: '15m ago', color: '#FFD60A' },
+    { id: '4', text: 'Rider Alex reached Legend Level', icon: 'award', time: '22m ago', color: '#FF6B2C' },
+    { id: '5', text: 'Night Cruise forming at Route 66', icon: 'moon', time: '30m ago', color: '#BB86FC' },
+    { id: '6', text: 'New trail mapped: Canyon Ridge', icon: 'compass', time: '45m ago', color: '#00B4FF' },
+  ],
+};

@@ -40,7 +40,7 @@ export default function LoginScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     await AsyncStorage.setItem(
-      'rideGuard_user',
+      'motosphere_user',
       JSON.stringify({ email, bikeType: bikeType || 'Sport', name: 'Ghost Rider' })
     );
 
@@ -58,7 +58,7 @@ export default function LoginScreen() {
           <View style={styles.logoCircle}>
             <Feather name="shield" size={32} color={Colors.dark.accent} />
           </View>
-          <Text style={styles.title}>RIDEGUARD</Text>
+          <Text style={styles.title}>MOTOSPHERE</Text>
           <Text style={styles.subtitle}>{isSignup ? 'Join the pack' : 'Welcome back, rider'}</Text>
         </View>
 

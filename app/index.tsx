@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform, Image } from 'react-native';
 import { router } from 'expo-router';
 import Animated, {
   useSharedValue,
@@ -31,7 +31,7 @@ export default function SplashScreen() {
     barWidth.value = withDelay(900, withTiming(100, { duration: 1200, easing: Easing.inOut(Easing.ease) }));
 
     const timer = setTimeout(async () => {
-      const user = await AsyncStorage.getItem('rideGuard_user');
+      const user = await AsyncStorage.getItem('motosphere_user');
       if (user) {
         router.replace('/(tabs)');
       } else {
@@ -60,14 +60,16 @@ export default function SplashScreen() {
     <View style={[styles.container, { paddingTop: insets.top + (Platform.OS === 'web' ? 67 : 0), paddingBottom: insets.bottom + (Platform.OS === 'web' ? 34 : 0) }]}>
       <View style={styles.content}>
         <Animated.View style={[styles.logoWrap, logoAnimStyle]}>
-          <View style={styles.logoCircle}>
-            <Feather name="shield" size={48} color={Colors.dark.accent} />
-          </View>
+          <Image
+            source={require('@/assets/images/logo_moto.jpeg')}
+            style={styles.splashLogo}
+            resizeMode="contain"
+          />
         </Animated.View>
 
         <Animated.View style={taglineAnimStyle}>
-          <Text style={styles.appName}>RIDEGUARD</Text>
-          <Text style={styles.tagline}>Ride Together. Stay Protected.</Text>
+          <Text style={styles.appName}>MOTOSPHERE</Text>
+          <Text style={styles.tagline}>Ride Alone. Explore Together.</Text>
         </Animated.View>
       </View>
 
@@ -94,15 +96,10 @@ const styles = StyleSheet.create({
   logoWrap: {
     marginBottom: 8,
   },
-  logoCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: Colors.dark.accentDim,
-    borderWidth: 2,
-    borderColor: Colors.dark.accent + '40',
-    alignItems: 'center',
-    justifyContent: 'center',
+  splashLogo: {
+    width: 140,
+    height: 140,
+    marginBottom: 10,
   },
   appName: {
     fontFamily: 'Rajdhani_700Bold',

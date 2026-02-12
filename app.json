@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "RideGuard",
-    "slug": "rideguard",
+    "name": "Motosphere",
+    "slug": "motosphere",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo_moto.jpeg",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/logo_moto.jpeg",
       "resizeMode": "contain",
       "backgroundColor": "#0B0B0B"
     },
@@ -35,14 +35,13 @@
         }
       },
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#0B0B0B",
+        "foregroundImage": "./assets/images/logo_moto.jpeg"
       }
     },
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "output": "single"
     },
     "plugins": [
       [

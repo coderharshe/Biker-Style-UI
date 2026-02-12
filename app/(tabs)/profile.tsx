@@ -27,7 +27,7 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    await AsyncStorage.removeItem('rideGuard_user');
+    await AsyncStorage.removeItem('motosphere_user');
     router.replace('/login');
   };
 

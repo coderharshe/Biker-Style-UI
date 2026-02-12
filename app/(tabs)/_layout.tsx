@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
 
 import Colors from "@/constants/colors";
+import LogoHeader from "@/components/LogoHeader";
 
 function NativeTabLayout() {
   return (
@@ -44,7 +45,8 @@ function ClassicTabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
+        header: () => <LogoHeader />,
         tabBarActiveTintColor: Colors.dark.tabActive,
         tabBarInactiveTintColor: Colors.dark.tabInactive,
         tabBarStyle: {

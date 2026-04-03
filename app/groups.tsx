@@ -16,26 +16,24 @@ import { router } from 'expo-router';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import Avatar from '@/components/Avatar';
-import { groupRides, chatMessages, currentUser } from '@/data/mockData';
+import { useGroups } from '@/hooks/useGroups';
+import { useChat } from '@/hooks/useChat';
+import { useProfile } from '@/hooks/useProfile';
 
 export default function GroupsScreen() {
     const insets = useSafeAreaInsets();
+    const { profile } = useProfile();
+    const { groups, loading, createGroup, joinGroup } = useGroups();
     const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+    const { messages, sendMessage } = useChat(selectedGroup);
     const [chatInput, setChatInput] = useState('');
-    const [messages, setMessages] = useState(chatMessages);
 
-    const selectedRide = groupRides.find((g) => g.id === selectedGroup);
+    const selectedRide = groups.find((g) => g.id === selectedGroup);
 
     const handleSendChat = () => {
-        if (!chatInput.trim()) return;
+        if (!chatInput.trim() || !profile?.id) return;
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        const newMsg = {
-            id: Date.now().toString(),
-            sender: currentUser.name,
-            text: chatInput.trim(),
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
-        setMessages((prev) => [...prev, newMsg]);
+        sendMessage(chatInput, profile.id);
         setChatInput('');
     };
 
@@ -54,12 +52,10 @@ export default function GroupsScreen() {
                     </Pressable>
                     <View style={styles.chatHeaderInfo}>
                         <Text style={styles.chatHeaderTitle}>{selectedRide.name}</Text>
-                        <Text style={styles.chatHeaderSub}>{selectedRide.members.length} riders</Text>
+                        <Text style={styles.chatHeaderSub}>{selectedRide.member_count} riders</Text>
                     </View>
                     <View style={styles.memberAvatarRow}>
-                        {selectedRide.members.slice(0, 3).map((m) => (
-                            <Avatar key={m.id} initials={m.avatar} size={28} color={Colors.dark.secondary} style={{ marginLeft: -6 }} />
-                        ))}
+                        <Avatar initials={String(selectedRide.member_count)} size={28} color={Colors.dark.secondary} />
                     </View>
                 </View>
 
@@ -83,14 +79,17 @@ export default function GroupsScreen() {
                     style={styles.chatList}
                     contentContainerStyle={styles.chatListContent}
                     renderItem={({ item }) => {
-                        const isMe = item.sender === currentUser.name;
+                        const isMe = item.sender_id === profile?.id;
+                        const senderName = item.profiles?.username || 'Rider';
                         return (
                             <View style={[styles.chatBubbleWrap, isMe && styles.chatBubbleWrapMe]}>
-                                {!isMe && <Text style={styles.chatSender}>{item.sender}</Text>}
+                                {!isMe && <Text style={styles.chatSender}>{senderName}</Text>}
                                 <View style={[styles.chatBubble, isMe && styles.chatBubbleMe]}>
                                     <Text style={[styles.chatText, isMe && styles.chatTextMe]}>{item.text}</Text>
+                                    <Text style={[styles.chatTime, isMe && styles.chatTimeMe]}>
+                                        {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </Text>
                                 </View>
-                                <Text style={[styles.chatTime, isMe && styles.chatTimeMe]}>{item.time}</Text>
                             </View>
                         );
                     }}
@@ -134,10 +133,8 @@ export default function GroupsScreen() {
                 contentContainerStyle={[styles.scroll, { paddingBottom: 40 }]}
                 showsVerticalScrollIndicator={false}
             >
-                <Text style={styles.sectionTitle}>ACTIVE & UPCOMING</Text>
-                {groupRides
-                    .filter((g) => g.status !== 'completed')
-                    .map((ride) => (
+                <Text style={styles.sectionTitle}>COMMUNITY GROUPS</Text>
+                {groups.map((ride) => (
                         <Pressable
                             key={ride.id}
                             style={({ pressed }) => [pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
@@ -151,66 +148,24 @@ export default function GroupsScreen() {
                                     <View style={styles.rideHeaderLeft}>
                                         <Text style={styles.rideName}>{ride.name}</Text>
                                         <View style={styles.rideStatusRow}>
-                                            <View style={[styles.statusDot, { backgroundColor: statusColors[ride.status] }]} />
-                                            <Text style={[styles.rideStatus, { color: statusColors[ride.status] }]}>
-                                                {ride.status.toUpperCase()}
+                                            <View style={[styles.statusDot, { backgroundColor: statusColors['active'] }]} />
+                                            <Text style={[styles.rideStatus, { color: statusColors['active'] }]}>
+                                                ACTIVE
                                             </Text>
                                         </View>
                                     </View>
                                     <Feather name="chevron-right" size={20} color={Colors.dark.textTertiary} />
                                 </View>
 
-                                <View style={styles.rideDetails}>
-                                    <View style={styles.rideDetail}>
-                                        <Feather name="user" size={13} color={Colors.dark.textTertiary} />
-                                        <Text style={styles.rideDetailText}>{ride.leader}</Text>
-                                    </View>
-                                    <View style={styles.rideDetail}>
-                                        <Feather name="navigation" size={13} color={Colors.dark.textTertiary} />
-                                        <Text style={styles.rideDetailText}>{ride.distance}</Text>
-                                    </View>
-                                    <View style={styles.rideDetail}>
-                                        <Feather name="clock" size={13} color={Colors.dark.textTertiary} />
-                                        <Text style={styles.rideDetailText}>{ride.startTime}</Text>
-                                    </View>
-                                </View>
-
                                 <View style={styles.membersRow}>
-                                    {ride.members.map((m) => (
-                                        <Avatar key={m.id} initials={m.avatar} size={30} color={Colors.dark.secondary} style={{ marginRight: -4 }} />
-                                    ))}
-                                    <Text style={styles.memberCount}>{ride.members.length} riders</Text>
+                                    <Avatar initials={String(ride.member_count)} size={30} color={Colors.dark.secondary} style={{ marginRight: -4 }} />
+                                    <Text style={styles.memberCount}>{ride.member_count} riders</Text>
                                 </View>
                             </GlassCard>
                         </Pressable>
                     ))}
 
-                <Text style={[styles.sectionTitle, { marginTop: 8 }]}>PAST RIDES</Text>
-                {groupRides
-                    .filter((g) => g.status === 'completed')
-                    .map((ride) => (
-                        <GlassCard key={ride.id} style={{ opacity: 0.6 }}>
-                            <View style={styles.rideHeader}>
-                                <View style={styles.rideHeaderLeft}>
-                                    <Text style={styles.rideName}>{ride.name}</Text>
-                                    <View style={styles.rideStatusRow}>
-                                        <Feather name="check-circle" size={12} color={Colors.dark.textTertiary} />
-                                        <Text style={[styles.rideStatus, { color: Colors.dark.textTertiary }]}>COMPLETED</Text>
-                                    </View>
-                                </View>
-                            </View>
-                            <View style={styles.rideDetails}>
-                                <View style={styles.rideDetail}>
-                                    <Feather name="navigation" size={13} color={Colors.dark.textTertiary} />
-                                    <Text style={styles.rideDetailText}>{ride.distance}</Text>
-                                </View>
-                                <View style={styles.rideDetail}>
-                                    <Feather name="map-pin" size={13} color={Colors.dark.textTertiary} />
-                                    <Text style={styles.rideDetailText}>{ride.route}</Text>
-                                </View>
-                            </View>
-                        </GlassCard>
-                    ))}
+                <Text style={[styles.sectionTitle, { marginTop: 8 }]}>MORE FEATURES COMING SOON</Text>
             </ScrollView>
         </View>
     );

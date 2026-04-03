@@ -12,7 +12,7 @@ import Animated, {
 import Colors from '@/constants/colors';
 
 interface MapMarkerProps {
-    position: { top: number; left: number };
+    position?: { top: number; left: number } | { lat: number; lng: number };
     isUser?: boolean;
     isSOS?: boolean;
     index: number;
@@ -47,47 +47,8 @@ export default function MapMarker({ position, isUser, isSOS, index }: MapMarkerP
                 -1,
                 false
             );
-        } else {
-            offsetX.value = withRepeat(
-                withDelay(
-                    index * 400,
-                    withSequence(
-                        withTiming(Math.random() * 6 - 3, {
-                            duration: 3000 + index * 500,
-                            easing: Easing.inOut(Easing.ease),
-                        }),
-                        withTiming(Math.random() * 6 - 3, {
-                            duration: 3000 + index * 500,
-                            easing: Easing.inOut(Easing.ease),
-                        })
-                    )
-                ),
-                -1,
-                true
-            );
-            offsetY.value = withRepeat(
-                withDelay(
-                    index * 300,
-                    withSequence(
-                        withTiming(Math.random() * 6 - 3, {
-                            duration: 2500 + index * 600,
-                            easing: Easing.inOut(Easing.ease),
-                        }),
-                        withTiming(Math.random() * 6 - 3, {
-                            duration: 2500 + index * 600,
-                            easing: Easing.inOut(Easing.ease),
-                        })
-                    )
-                ),
-                -1,
-                true
-            );
         }
     }, []);
-
-    const markerStyle = useAnimatedStyle(() => ({
-        transform: [{ translateX: offsetX.value }, { translateY: offsetY.value }],
-    }));
 
     const pulseStyle = useAnimatedStyle(() => ({
         transform: [{ scale: pulse.value }],
@@ -101,8 +62,7 @@ export default function MapMarker({ position, isUser, isSOS, index }: MapMarkerP
         <Animated.View
             style={[
                 styles.mapMarker,
-                { top: `${position.top}%`, left: `${position.left}%` },
-                markerStyle,
+                position && 'top' in position && { top: `${position.top}%`, left: `${position.left}%` },
             ]}
         >
             {(isUser || isSOS) && (
@@ -138,7 +98,6 @@ export default function MapMarker({ position, isUser, isSOS, index }: MapMarkerP
 
 const styles = StyleSheet.create({
     mapMarker: {
-        position: 'absolute',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 5,

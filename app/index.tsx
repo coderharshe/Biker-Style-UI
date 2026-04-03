@@ -13,7 +13,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import Colors from '@/constants/colors';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '@/lib/supabase';
 
 export default function SplashScreen() {
   const insets = useSafeAreaInsets();
@@ -30,16 +30,31 @@ export default function SplashScreen() {
     barOpacity.value = withDelay(800, withTiming(1, { duration: 400 }));
     barWidth.value = withDelay(900, withTiming(100, { duration: 1200, easing: Easing.inOut(Easing.ease) }));
 
-    const timer = setTimeout(async () => {
-      const user = await AsyncStorage.getItem('motosphere_user');
-      if (user) {
+    let navigated = false;
+
+    const navigate = (hasSession: boolean) => {
+      if (navigated) return;
+      navigated = true;
+      if (hasSession) {
         router.replace('/(tabs)');
       } else {
         router.replace('/login');
       }
-    }, 2500);
+    };
 
-    return () => clearTimeout(timer);
+    // Listen for the auth state change (fires once session is restored from AsyncStorage)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Wait for splash animation to finish before navigating
+      setTimeout(() => navigate(!!session), 2000);
+    });
+
+    // Fallback timeout — if onAuthStateChange never fires within 4s, go to login
+    const fallback = setTimeout(() => navigate(false), 4000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(fallback);
+    };
   }, []);
 
   const logoAnimStyle = useAnimatedStyle(() => ({

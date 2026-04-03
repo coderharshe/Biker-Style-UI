@@ -18,10 +18,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import Avatar from '@/components/Avatar';
 import GlassCard from '@/components/GlassCard';
+import { useSOS } from '@/hooks/useSOS';
 import { sosHelpers } from '@/data/mockData';
 
 export default function SOSScreen() {
   const insets = useSafeAreaInsets();
+  const { triggerSOS, activeSOS } = useSOS();
+  const [hasTriggered, setHasTriggered] = React.useState(false);
 
   // Animation values
   const pulseScale = useSharedValue(1);
@@ -30,6 +33,11 @@ export default function SOSScreen() {
   const scanOpacity = useSharedValue(0.2);
 
   useEffect(() => {
+    if (!hasTriggered) {
+      triggerSOS().catch(console.error);
+      setHasTriggered(true);
+    }
+
     // Initial error notification
     if (Platform.OS !== 'web') {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

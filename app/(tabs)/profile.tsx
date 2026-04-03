@@ -13,7 +13,6 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -28,7 +27,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import Avatar from '@/components/Avatar';
-import { currentUser, badges } from '@/data/mockData';
+import { supabase } from '@/lib/supabase';
+import { useProfile } from '@/hooks/useProfile';
+import { badges } from '@/data/mockData';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -43,7 +44,10 @@ const RANK_TITLES: { [key: number]: string } = {
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
-  const earnedBadges = badges.filter((b) => currentUser.badges.includes(b.id));
+  const { profile, loading: profileLoading } = useProfile();
+  
+  // Use mock badges for now, filtered by real user if we had a mapping
+  const earnedBadges = badges.slice(0, 5); 
 
   const scanLinePos = useSharedValue(0);
   const glowOpacity = useSharedValue(0.4);
@@ -74,11 +78,20 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    await AsyncStorage.removeItem('motosphere_user');
+    await supabase.auth.signOut();
     router.replace('/login');
   };
 
-  const title = RANK_TITLES[currentUser.rank] || 'STREET RIDER';
+  if (profileLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text style={{ color: Colors.dark.text, fontFamily: 'Rajdhani_600SemiBold' }}>INITIALIZING SCAN...</Text>
+      </View>
+    );
+  }
+
+  const userRank = 3; // Default or calculated
+  const title = RANK_TITLES[userRank] || 'STREET RIDER';
 
   return (
     <View style={styles.container}>
@@ -112,7 +125,7 @@ export default function ProfileScreen() {
             <View style={styles.cardContent}>
               <View style={styles.cardHeader}>
                 <View style={styles.rankBadge}>
-                  <Text style={styles.rankNum}>#{currentUser.rank}</Text>
+                  <Text style={styles.rankNum}>#{userRank}</Text>
                 </View>
                 <View style={styles.titleFrame}>
                   <Text style={styles.titleText}>{title}</Text>
@@ -122,18 +135,18 @@ export default function ProfileScreen() {
               <View style={styles.profileRow}>
                 <View style={styles.avatarContainer}>
                   <View style={styles.avatarBorder}>
-                    <Avatar initials={currentUser.avatar} size={70} color={Colors.dark.accent} />
+                    <Avatar initials={profile?.username?.substring(0, 2).toUpperCase() || 'GR'} size={70} color={Colors.dark.accent} />
                   </View>
                   <View style={styles.levelTag}>
-                    <Text style={styles.levelTagText}>{currentUser.level}</Text>
+                    <Text style={styles.levelTagText}>{profile?.level || 1}</Text>
                   </View>
                 </View>
 
                 <View style={styles.profileInfo}>
-                  <Text style={styles.userName}>{currentUser.name}</Text>
+                  <Text style={styles.userName}>{profile?.username || 'Ghost Rider'}</Text>
                   <View style={styles.bikeTag}>
                     <Feather name="zap" size={12} color={Colors.dark.accent} />
-                    <Text style={styles.bikeTagText}>{currentUser.bikeType.toUpperCase()} CLASS</Text>
+                    <Text style={styles.bikeTagText}>{(profile?.bike_model || 'Sport').toUpperCase()} CLASS</Text>
                   </View>
                 </View>
               </View>
@@ -142,10 +155,10 @@ export default function ProfileScreen() {
               <View style={styles.cardXPContainer}>
                 <View style={styles.xpHeader}>
                   <Text style={styles.xpLabel}>EXPERIENCE POINT</Text>
-                  <Text style={styles.xpValue}>{currentUser.xp} XP</Text>
+                  <Text style={styles.xpValue}>{profile?.xp || 0} XP</Text>
                 </View>
                 <View style={styles.xpTrack}>
-                  <View style={[styles.xpFill, { width: '65%' }]}>
+                  <View style={[styles.xpFill, { width: `${Math.min((profile?.xp || 0) / 10, 100)}%` }]}>
                     <Animated.View style={[styles.xpGlow, glowStyle]} />
                   </View>
                 </View>
@@ -158,7 +171,7 @@ export default function ProfileScreen() {
         <View style={styles.statsGrid}>
           <Animated.View entering={FadeInRight.delay(200)} style={styles.statBox}>
             <Text style={styles.statLabel}>ALL TIME KM</Text>
-            <Text style={styles.statValue}>{currentUser.totalKm.toLocaleString()}</Text>
+            <Text style={styles.statValue}>0</Text>
             <View style={styles.statIconWrap}>
               <Feather name="navigation" size={16} color={Colors.dark.accent} />
             </View>
@@ -166,7 +179,7 @@ export default function ProfileScreen() {
 
           <Animated.View entering={FadeInRight.delay(300)} style={styles.statBox}>
             <Text style={styles.statLabel}>SOS RESCUES</Text>
-            <Text style={styles.statValue}>{currentUser.sosHelps}</Text>
+            <Text style={styles.statValue}>0</Text>
             <View style={[styles.statIconWrap, { backgroundColor: Colors.dark.secondaryDim }]}>
               <Feather name="shield" size={16} color={Colors.dark.secondary} />
             </View>

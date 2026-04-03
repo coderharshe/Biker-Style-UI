@@ -18,9 +18,13 @@ import Animated, {
     Easing,
 } from 'react-native-reanimated';
 import Colors from '@/constants/colors';
-import { dashboardData } from '@/data/mockData';
+import { useLocation } from '@/hooks/useLocation';
+import { useRiderLocations } from '@/hooks/useRiderLocations';
+import { useSOS } from '@/hooks/useSOS';
+import { useProfile } from '@/hooks/useProfile';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from '@/components/MapLib';
 import { mapStyle } from '@/components/CustomMapStyle';
+import MapMarker from '@/components/MapMarker';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -64,7 +68,10 @@ function FloatingChip({
 
 export default function MapScreen() {
     const insets = useSafeAreaInsets();
-    const d = dashboardData;
+    const { profile } = useProfile();
+    const { location } = useLocation();
+    const { riderLocations } = useRiderLocations();
+    const { activeSOS } = useSOS();
 
     return (
         <View style={styles.container}>
@@ -74,10 +81,10 @@ export default function MapScreen() {
                     style={styles.map}
                     customMapStyle={mapStyle}
                     initialRegion={{
-                        latitude: 37.78825,
-                        longitude: -122.4324,
-                        latitudeDelta: 0.012,
-                        longitudeDelta: 0.010,
+                        latitude: location?.coords.latitude || 34.1642,
+                        longitude: location?.coords.longitude || 77.5848,
+                        latitudeDelta: 0.05,
+                        longitudeDelta: 0.05,
                     }}
                     showsUserLocation={true}
                     showsMyLocationButton={false}
@@ -97,32 +104,40 @@ export default function MapScreen() {
                         strokeWidth={6}
                     />
 
-                    {d.mapData.riderPositions.map((pos, i) => (
+                    {riderLocations.map((pos, i) => (
                         <Marker
-                            key={pos.id}
+                            key={pos.user_id}
                             coordinate={{
-                                latitude: 37.78825 + (pos.top - 50) * 0.0001,
-                                longitude: -122.4324 + (pos.left - 50) * 0.0001,
+                                latitude: pos.lat,
+                                longitude: pos.lng,
                             }}
                         >
-                            <View style={[
-                                styles.markerDot,
-                                {
-                                    width: pos.isUser ? 16 : pos.isSOS ? 14 : 12,
-                                    height: pos.isUser ? 16 : pos.isSOS ? 14 : 12,
-                                    borderRadius: (pos.isUser ? 16 : pos.isSOS ? 14 : 12) / 2,
-                                    backgroundColor: pos.isUser ? Colors.dark.secondary : pos.isSOS ? Colors.dark.sos : Colors.dark.accent,
-                                    borderColor: '#0D1117',
-                                    borderWidth: 2,
-                                    shadowColor: pos.isSOS ? Colors.dark.sos : Colors.dark.accent,
-                                    shadowOffset: { width: 0, height: 0 },
-                                    shadowOpacity: 0.8,
-                                    shadowRadius: 6,
-                                    elevation: 6,
-                                }
-                            ]} />
+                            <MapMarker position={pos} isUser={pos.user_id === profile?.id} isSOS={false} index={i} />
                         </Marker>
                     ))}
+
+                    {activeSOS.map((sos, i) => (
+                        <Marker
+                            key={`sos-${sos.id}`}
+                            coordinate={{
+                                latitude: sos.lat,
+                                longitude: sos.lng
+                            }}
+                        >
+                            <MapMarker position={{ lat: sos.lat, lng: sos.lng }} isUser={false} isSOS={true} index={i} />
+                        </Marker>
+                    ))}
+
+                    {location && (
+                        <Marker
+                            coordinate={{
+                                latitude: location.coords.latitude,
+                                longitude: location.coords.longitude
+                            }}
+                        >
+                            <MapMarker position={{ lat: location.coords.latitude, lng: location.coords.longitude }} isUser={true} isSOS={false} index={-1} />
+                        </Marker>
+                    )}
                 </MapView>
 
                 {/* Top Bar */}
@@ -158,14 +173,14 @@ export default function MapScreen() {
                         <FloatingChip
                             icon="users"
                             label="Riders"
-                            value={d.mapData.nearbyRiders}
+                            value={riderLocations.length}
                             color={Colors.dark.accent}
                             delay={200}
                         />
                         <FloatingChip
                             icon="alert-triangle"
                             label="SOS"
-                            value={d.mapData.activeSOS}
+                            value={activeSOS.length}
                             color={Colors.dark.sos}
                             delay={400}
                         />

@@ -29,10 +29,15 @@ import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import SOSButton from '@/components/SOSButton';
 import DestinationPicker, { Destination } from '@/components/DestinationPicker';
-import { dashboardData, sosHelpers, currentUser } from '@/data/mockData';
+import { dashboardData, sosHelpers } from '@/data/mockData';
+import { useProfile } from '@/hooks/useProfile';
 import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from '@/components/MapLib';
 import { mapStyle } from '@/components/CustomMapStyle';
 import MapMarker from '@/components/MapMarker';
+import { useLocation } from '@/hooks/useLocation';
+import { useRiderLocations } from '@/hooks/useRiderLocations';
+import { useSOS } from '@/hooks/useSOS';
+import { useProximityAlerts } from '@/hooks/useProximityAlerts';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -137,6 +142,11 @@ function CommunityCard({ item }: { item: typeof dashboardData.communityFeed[0] }
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const { profile, loading: profileLoading } = useProfile();
+  const { location } = useLocation(); // Start tracking local location
+  const { riderLocations } = useRiderLocations(); // Listen to other riders
+  const { activeSOS } = useSOS(); // Listen to emergency alerts
+  useProximityAlerts(); // Track and alert for nearby riders
   const d = dashboardData;
   const goalProgress = useSharedValue(0);
 
@@ -192,7 +202,7 @@ export default function HomeScreen() {
         <View style={styles.greetingSection}>
           <View style={styles.greetingLeft}>
             <Text style={styles.greetingLabel}>{getGreeting()}</Text>
-            <Text style={styles.greetingName}>{currentUser.name}</Text>
+            <Text style={styles.greetingName}>{profile?.username || 'Rider'}</Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: statusColor + '18', borderColor: statusColor + '40' }]}>
             <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
@@ -265,17 +275,40 @@ export default function HomeScreen() {
                   longitudeDelta: 0.05,
                 }}
               >
-                {d.mapData.riderPositions.map((pos: any, i: number) => (
+                {riderLocations.map((pos, i) => (
                   <Marker
-                    key={pos.id}
+                    key={pos.user_id}
                     coordinate={{
-                      latitude: 34.1642 + (pos.top - 50) * 0.001,
-                      longitude: 77.5848 + (pos.left - 50) * 0.001
+                      latitude: pos.lat,
+                      longitude: pos.lng
                     }}
                   >
-                    <MapMarker position={pos} isUser={pos.isUser} isSOS={pos.isSOS} index={i} />
+                    <MapMarker position={pos} isUser={pos.user_id === profile?.id} isSOS={false} index={i} />
                   </Marker>
                 ))}
+
+                {activeSOS.map((sos, i) => (
+                  <Marker
+                    key={`sos-${sos.id}`}
+                    coordinate={{
+                      latitude: sos.lat,
+                      longitude: sos.lng
+                    }}
+                  >
+                    <MapMarker position={{ lat: sos.lat, lng: sos.lng }} isUser={false} isSOS={true} index={i} />
+                  </Marker>
+                ))}
+
+                {location && (
+                  <Marker
+                    coordinate={{
+                      latitude: location.coords.latitude,
+                      longitude: location.coords.longitude
+                    }}
+                  >
+                    <MapMarker position={{ lat: location.coords.latitude, lng: location.coords.longitude }} isUser={true} isSOS={false} index={-1} />
+                  </Marker>
+                )}
 
                 {selectedDestination && (
                   <>
@@ -435,7 +468,7 @@ export default function HomeScreen() {
               <Feather name="zap" size={16} color={Colors.dark.accent} />
               <Text style={styles.xpTitle}>{d.gamification.levelTitle}</Text>
             </View>
-            <Text style={styles.xpNumbers}>{d.gamification.xp} / {d.gamification.nextLevelXP} XP</Text>
+            <Text style={styles.xpNumbers}>{profile?.xp || 0} / {d.gamification.nextLevelXP} XP</Text>
           </View>
           <View style={styles.xpTrack}>
             <Animated.View style={[styles.xpFill, xpBarStyle]}>

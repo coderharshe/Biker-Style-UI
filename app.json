@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0B0B0B"
     },
@@ -48,7 +48,7 @@
       },
       "adaptiveIcon": {
         "backgroundColor": "#0B0B0B",
-        "foregroundImage": "./assets/images/adaptive-icon.png"
+        "foregroundImage": "./assets/images/android-icon-foreground.png"
       }
     },
     "web": {
@@ -70,7 +70,19 @@
           "locationAlwaysAndWhenInUsePermission": "Allow Motosphere to use your location."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "minSdkVersion": 24,
+            "extraMavenRepos": [
+              "https://maven.google.com"
+            ]
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

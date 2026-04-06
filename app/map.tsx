@@ -96,8 +96,10 @@ export default function MapScreen() {
     }, [location?.coords.latitude, location?.coords.longitude]);
 
     // For iOS, we default to Apple Maps if no Google key is provided to avoid crashes/blank maps.
-    // For Android, Google Maps is the default and still requires a key in app.json to show tiles.
-    const mapProvider = Platform.OS === 'ios' ? undefined : PROVIDER_GOOGLE;
+    // For Android, only use Google Maps if a valid API key is configured.
+    const googleApiKey = Constants.expoConfig?.android?.config?.googleMaps?.apiKey;
+    const hasValidGoogleKey = !!googleApiKey && googleApiKey !== 'YOUR_ANDROID_API_KEY_HERE';
+    const mapProvider = Platform.OS === 'android' && hasValidGoogleKey ? PROVIDER_GOOGLE : undefined;
 
     return (
         <View style={styles.container}>

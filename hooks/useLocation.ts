@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import * as Location from 'expo-location';
+import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 
 // Helper: Calculate distance between two coordinates in km using Haversine formula
@@ -32,6 +33,7 @@ export function useLocation(rideId?: string | null) {
 
   // Background Task Management
   const startBackgroundTracking = async () => {
+    if (Platform.OS === 'web') return;
     const isRegistered = await Location.hasStartedLocationUpdatesAsync(LOCATION_TRACKING_TASK);
     if (!isRegistered) {
       await Location.startLocationUpdatesAsync(LOCATION_TRACKING_TASK, {
@@ -49,6 +51,7 @@ export function useLocation(rideId?: string | null) {
   };
 
   const stopBackgroundTracking = async () => {
+    if (Platform.OS === 'web') return;
     const isRegistered = await Location.hasStartedLocationUpdatesAsync(LOCATION_TRACKING_TASK);
     if (isRegistered) {
       await Location.stopLocationUpdatesAsync(LOCATION_TRACKING_TASK);
@@ -76,9 +79,11 @@ export function useLocation(rideId?: string | null) {
       }
 
       // Background permissions - specifically required for background tasks
-      let { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
-      if (bgStatus !== 'granted') {
-          console.warn('Background location permission not granted. Background tracking will not work.');
+      if (Platform.OS !== 'web') {
+          let { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
+          if (bgStatus !== 'granted') {
+              console.warn('Background location permission not granted. Background tracking will not work.');
+          }
       }
 
       const loc = await Location.getCurrentPositionAsync({});

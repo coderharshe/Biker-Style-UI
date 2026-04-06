@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -30,6 +30,7 @@ import { useRiderLocations } from '@/hooks/useRiderLocations';
 import { useSOS } from '@/hooks/useSOS';
 import { useProximityAlerts } from '@/hooks/useProximityAlerts';
 import { useRide } from '@/hooks/useRide';
+import Constants from 'expo-constants';
 
 // Modular Dashboard Components
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -113,9 +114,15 @@ export default function HomeScreen() {
           <View style={styles.mapContainer}>
             <View style={styles.mapPlaceholder}>
               <MapView
-                provider={PROVIDER_GOOGLE}
+                provider={
+                  Platform.OS === 'android' &&
+                  Constants.expoConfig?.android?.config?.googleMaps?.apiKey &&
+                  Constants.expoConfig.android.config.googleMaps.apiKey !== 'YOUR_ANDROID_API_KEY_HERE'
+                    ? PROVIDER_GOOGLE
+                    : undefined
+                }
                 style={styles.map}
-                customMapStyle={mapStyle}
+                customMapStyle={Platform.OS === 'android' ? mapStyle : undefined}
                 initialRegion={{
                   latitude: location?.coords.latitude || 34.1642,
                   longitude: location?.coords.longitude || 77.5848,

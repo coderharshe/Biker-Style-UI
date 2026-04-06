@@ -296,7 +296,7 @@ export const communityPosts: CommunityPost[] = [
     handle: '@ghost_rider_01',
     avatar: 'GR',
     content: 'Sunday morning city blast! 🏍️💨 50km of pure urban exploration. The bike felt sharp and the fuel economy was surprisingly good despite the traffic. #CityRide #50KClub',
-    image: 'file:///C:/Users/operator/.gemini/antigravity/brain/64d57b3c-3a8a-4e9c-b82c-e37837c02e9d/strava_style_city_ride_map_v2_1770839406799.png',
+    image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=1000&auto=format&fit=crop',
     timestamp: '30m',
     likes: 42,
     comments: 5,

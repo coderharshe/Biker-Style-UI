@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -45,6 +45,7 @@ const RANK_TITLES: { [key: number]: string } = {
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { profile, loading: profileLoading } = useProfile();
+  const [totalKm, setTotalKm] = useState(0);
   
   // Use mock badges for now, filtered by real user if we had a mapping
   const earnedBadges = badges.slice(0, 5); 
@@ -66,6 +67,24 @@ export default function ProfileScreen() {
       -1,
       true
     );
+
+    // Fetch total KM
+    const fetchDistance = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('rides')
+          .select('distance')
+          .eq('status', 'completed')
+          .eq('user_id', user.id);
+        
+        if (data) {
+          const sum = data.reduce((acc, curr) => acc + (curr.distance || 0), 0);
+          setTotalKm(parseFloat(sum.toFixed(1)));
+        }
+      }
+    };
+    fetchDistance();
   }, []);
 
   const scanLineStyle = useAnimatedStyle(() => ({
@@ -171,7 +190,7 @@ export default function ProfileScreen() {
         <View style={styles.statsGrid}>
           <Animated.View entering={FadeInRight.delay(200)} style={styles.statBox}>
             <Text style={styles.statLabel}>ALL TIME KM</Text>
-            <Text style={styles.statValue}>0</Text>
+            <Text style={styles.statValue}>{totalKm}</Text>
             <View style={styles.statIconWrap}>
               <Feather name="navigation" size={16} color={Colors.dark.accent} />
             </View>

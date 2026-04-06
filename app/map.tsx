@@ -66,20 +66,46 @@ function FloatingChip({
     );
 }
 
+import { fetchRouteLines, RoutePoint } from '@/lib/directions';
+import Constants from 'expo-constants';
+
 export default function MapScreen() {
     const insets = useSafeAreaInsets();
     const { profile } = useProfile();
     const { location } = useLocation();
     const { riderLocations } = useRiderLocations();
     const { activeSOS } = useSOS();
+    
+    const [routeCoords, setRouteCoords] = useState<RoutePoint[]>([]);
+
+    useEffect(() => {
+        if (location) {
+            // Destination (In production, this would be dynamic via group info)
+            const destination = { latitude: 34.1842, longitude: 77.6048 };
+            
+            // On Android, we prefer the config key. On Web/iOS fallback is OSRM.
+            const apiKey = Constants.expoConfig?.android?.config?.googleMaps?.apiKey;
+            const finalKey = apiKey === 'YOUR_ANDROID_API_KEY_HERE' ? undefined : apiKey;
+            
+            fetchRouteLines(
+                { latitude: location.coords.latitude, longitude: location.coords.longitude },
+                destination,
+                finalKey
+            ).then(setRouteCoords);
+        }
+    }, [location?.coords.latitude, location?.coords.longitude]);
+
+    // For iOS, we default to Apple Maps if no Google key is provided to avoid crashes/blank maps.
+    // For Android, Google Maps is the default and still requires a key in app.json to show tiles.
+    const mapProvider = Platform.OS === 'ios' ? undefined : PROVIDER_GOOGLE;
 
     return (
         <View style={styles.container}>
             <View style={styles.mapContainer}>
                 <MapView
-                    provider={PROVIDER_GOOGLE}
+                    provider={mapProvider}
                     style={styles.map}
-                    customMapStyle={mapStyle}
+                    customMapStyle={Platform.OS === 'android' ? mapStyle : undefined}
                     initialRegion={{
                         latitude: location?.coords.latitude || 34.1642,
                         longitude: location?.coords.longitude || 77.5848,
@@ -92,17 +118,13 @@ export default function MapScreen() {
                     rotateEnabled={true}
                     pitchEnabled={true}
                 >
-                    <Polyline
-                        coordinates={[
-                            { latitude: 37.78825, longitude: -122.4324 },
-                            { latitude: 37.78925, longitude: -122.4344 },
-                            { latitude: 37.79025, longitude: -122.4364 },
-                            { latitude: 37.79155, longitude: -122.4380 },
-                            { latitude: 37.79305, longitude: -122.4400 },
-                        ]}
-                        strokeColor={Colors.dark.accent}
-                        strokeWidth={6}
-                    />
+                    {routeCoords.length > 0 && (
+                        <Polyline
+                            coordinates={routeCoords}
+                            strokeColor={Colors.dark.accent}
+                            strokeWidth={6}
+                        />
+                    )}
 
                     {riderLocations.map((pos, i) => (
                         <Marker

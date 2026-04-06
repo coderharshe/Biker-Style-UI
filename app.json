@@ -4,30 +4,40 @@
     "slug": "motosphere",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo_moto.jpeg",
-    "scheme": "myapp",
+    "icon": "./assets/images/icon.png",
+    "scheme": "motosphere",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/logo_moto.jpeg",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#0B0B0B"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.myapp",
+      "bundleIdentifier": "com.harsh.motosphere",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby riders and navigate to destinations."
+        "NSLocationWhenInUseUsageDescription": "Motosphere uses your location to discover nearby riders and navigate our beautiful routes.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "To track your ride accurately and provide proximity alerts, Motosphere needs background location access.",
+        "UIBackgroundModes": [
+          "location",
+          "fetch",
+          "remote-notification"
+        ]
       },
       "config": {
         "googleMapsApiKey": "YOUR_IOS_API_KEY_HERE"
       }
     },
     "android": {
-      "package": "com.myapp",
+      "package": "com.harsh.motosphere",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "WAKE_LOCK"
       ],
       "config": {
         "googleMaps": {
@@ -36,7 +46,7 @@
       },
       "adaptiveIcon": {
         "backgroundColor": "#0B0B0B",
-        "foregroundImage": "./assets/images/logo_moto.jpeg"
+        "foregroundImage": "./assets/images/adaptive-icon.png"
       }
     },
     "web": {
@@ -51,7 +61,14 @@
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Motosphere to use your location."
+        }
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,

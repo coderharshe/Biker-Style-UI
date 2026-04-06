@@ -30,6 +30,14 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidCatch(error: Error, info: { componentStack: string }): void {
+    // Log to console in dev
+    if (__DEV__) {
+        console.error('ErrorBoundary caught an error:', error, info);
+    }
+
+    // Report to Sentry (Placeholder for professional telemetry)
+    // Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
+
     if (typeof this.props.onError === "function") {
       this.props.onError(error, info.componentStack);
     }

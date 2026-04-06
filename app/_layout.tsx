@@ -12,6 +12,8 @@ import {
   Rajdhani_700Bold,
 } from "@expo-google-fonts/rajdhani";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import "@/lib/locationTask";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,6 +41,8 @@ export default function RootLayout() {
     Rajdhani_600SemiBold,
     Rajdhani_700Bold,
   });
+  
+  usePushNotifications();
 
   useEffect(() => {
     if (fontsLoaded) {

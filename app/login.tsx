@@ -195,8 +195,20 @@ export default function LoginScreen() {
 
       if (error) throw error;
 
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(tabs)');
+      // Force a short delay to ensure the session is internally persisted
+      // and available for the next route's initial fetch
+      if (data.session) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          router.replace('/(tabs)');
+      } else {
+          // If no session but no error, wait and try to getSession
+          const { data: { session: existingSession } } = await supabase.auth.getSession();
+          if (existingSession) {
+            router.replace('/(tabs)');
+          } else {
+            throw new Error('Verification successful but session not found. Please try logging in.');
+          }
+      }
     } catch (err: any) {
       const message = err?.message || 'Invalid or expired code. Please try again.';
       Alert.alert('Verification Failed', message);

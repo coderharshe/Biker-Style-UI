@@ -8,24 +8,46 @@ export function useProfile() {
   const [error, setError] = useState<any>(null);
 
   useEffect(() => {
-    fetchProfile();
+    let isMounted = true;
+    const load = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && isMounted) {
+        fetchProfile();
+      } else if (isMounted) {
+        setLoading(false);
+      }
+    };
+    load();
+    return () => { isMounted = false; };
   }, []);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (retryCount = 0) => {
     try {
       if (!profile) setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user found');
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase.from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // If it's a new user, the profile might still be being created by the trigger
+        if (retryCount < 3) {
+          setTimeout(() => fetchProfile(retryCount + 1), 1000);
+          return;
+        }
+        throw error;
+      }
+      
       setProfile(data);
     } catch (e) {
       setError(e);
+      console.error('Error fetching profile:', e);
     } finally {
       setLoading(false);
     }

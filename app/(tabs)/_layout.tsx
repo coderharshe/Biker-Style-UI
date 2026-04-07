@@ -1,17 +1,47 @@
-import { Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
 import { BlurView } from "expo-blur";
-import { Platform, StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React from "react";
 
 import Colors from "@/constants/colors";
 import LogoHeader from "@/components/LogoHeader";
+import { supabase } from "@/lib/supabase";
 
 export default function TabLayout() {
   const isWeb = Platform.OS === "web";
   const isIOS = Platform.OS === "ios";
   const safeAreaInsets = useSafeAreaInsets();
+  const [isInitializing, setIsInitializing] = React.useState(true);
+  const [hasSession, setHasSession] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setHasSession(!!session);
+      setIsInitializing(false);
+      
+      if (!session) {
+        // Use a slight delay to ensure the splash screen or login screen is ready to receive the redirect
+        setTimeout(() => router.replace('/login'), 100);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  if (isInitializing) {
+    return (
+      <View style={{ flex: 1, backgroundColor: Colors.dark.background, justifyContent: 'center', alignItems: 'center' }}>
+        <LogoHeader />
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+            <Text style={{ color: Colors.dark.textSecondary, fontFamily: 'Rajdhani_500Medium' }}>IGNITING ENGINES...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (!hasSession) return null;
 
   return (
     <Tabs

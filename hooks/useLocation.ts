@@ -79,24 +79,38 @@ export function useLocation(rideId?: string | null) {
 
   useEffect(() => {
     (async () => {
-      // Foreground permissions
-      let { status: fgStatus } = await Location.requestForegroundPermissionsAsync();
-      if (fgStatus !== 'granted') {
-        setErrorMsg('Permission to access location was denied');
-        return;
-      }
-
-      // Background permissions - specifically required for background tasks
-      if (Platform.OS !== 'web') {
-          let { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
-          if (bgStatus !== 'granted') {
-              console.warn('Background location permission not granted. Background tracking will not work.');
+      try {
+          // Foreground permissions
+          let { status: fgStatus } = await Location.getForegroundPermissionsAsync();
+          if (fgStatus !== 'granted') {
+              const { status: reqStatus } = await Location.requestForegroundPermissionsAsync();
+              fgStatus = reqStatus;
           }
-      }
+          
+          if (fgStatus !== 'granted') {
+            setErrorMsg('Permission to access location was denied');
+            return;
+          }
 
-      const loc = await Location.getCurrentPositionAsync({});
-      setLocation(loc);
-      if (!lastLocationRef.current) lastLocationRef.current = loc;
+          // Background permissions
+          if (Platform.OS !== 'web') {
+              const { status: currentBgStatus } = await Location.getBackgroundPermissionsAsync();
+              if (currentBgStatus !== 'granted') {
+                  // Don't await this if it's already denied or if we want faster boot
+                  Location.requestBackgroundPermissionsAsync().then(({ status }) => {
+                      if (status !== 'granted') console.warn('Background location denied.');
+                  });
+              }
+          }
+
+          const loc = await Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.Balanced
+          }).catch(() => null);
+          
+          if (loc) {
+            setLocation(loc);
+            if (!lastLocationRef.current) lastLocationRef.current = loc;
+          }
 
       // Start watching location (Foreground)
       subscriptionRef.current = await Location.watchPositionAsync(
@@ -139,6 +153,10 @@ export function useLocation(rideId?: string | null) {
           }
         }
       );
+    } catch (err) {
+      console.error('Error initializing location:', err);
+      setErrorMsg('Failed to initialize location tracking');
+    }
     })();
 
     return () => {

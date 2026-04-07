@@ -92,16 +92,10 @@ export function useLocation(rideId?: string | null) {
             return;
           }
 
-          // Background permissions
-          if (Platform.OS !== 'web') {
-              const { status: currentBgStatus } = await Location.getBackgroundPermissionsAsync();
-              if (currentBgStatus !== 'granted') {
-                  // Don't await this if it's already denied or if we want faster boot
-                  Location.requestBackgroundPermissionsAsync().then(({ status }) => {
-                      if (status !== 'granted') console.warn('Background location denied.');
-                  });
-              }
-          }
+          // Removed automatic Background permissions request. 
+          // Android 11+ prohibits auto-requesting background permissions without explicitly bringing the user to settings.
+          // The Foreground service handles our tracking while the app is active, and background 
+          // permission is strictly handled separatedly or naturally via the service notification if needed.
 
           const loc = await Location.getCurrentPositionAsync({
               accuracy: Location.Accuracy.Balanced

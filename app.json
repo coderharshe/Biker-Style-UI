@@ -40,6 +40,11 @@
       "adaptiveIcon": {
         "backgroundColor": "#0B0B0B",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSy_MOCK_HOLDER"
+        }
       }
     },
     "web": {
@@ -74,7 +79,7 @@
         "expo-build-properties",
         {
           "android": {
-            "enableProguardInReleaseBuilds": true,
+            "enableProguardInReleaseBuilds": false,
             "minSdkVersion": 24,
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,

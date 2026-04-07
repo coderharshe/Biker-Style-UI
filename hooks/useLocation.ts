@@ -78,6 +78,7 @@ export function useLocation(rideId?: string | null) {
   }, [rideId]);
 
   useEffect(() => {
+    let isMounted = true;
     (async () => {
       try {
           // Foreground permissions
@@ -133,16 +134,21 @@ export function useLocation(rideId?: string | null) {
           
           // Foreground sync to Supabase (Background task handles the rest)
           if (rideId) {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-              await supabase.from('ride_points').insert({
-                ride_id: rideId,
-                user_id: user.id,
-                lat: newLocation.coords.latitude,
-                lng: newLocation.coords.longitude,
-                alt: newLocation.coords.altitude,
-                speed: newLocation.coords.speed,
-              });
+            try {
+              // Reuse or fetch user once
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user && isMounted) {
+                await supabase.from('ride_points').insert({
+                  ride_id: rideId,
+                  user_id: user.id,
+                  lat: newLocation.coords.latitude,
+                  lng: newLocation.coords.longitude,
+                  alt: newLocation.coords.altitude,
+                  speed: newLocation.coords.speed,
+                });
+              }
+            } catch (authErr) {
+              console.warn('Silent auth failure in location watch:', authErr);
             }
           }
         }
@@ -154,6 +160,7 @@ export function useLocation(rideId?: string | null) {
     })();
 
     return () => {
+      isMounted = false;
       if (subscriptionRef.current) {
         subscriptionRef.current.remove();
       }

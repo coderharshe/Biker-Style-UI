@@ -23,24 +23,28 @@ export function usePushNotifications() {
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
-    registerForPushNotificationsAsync()
-      .then(token => {
-        if (token) {
-          setExpoPushToken(token);
-          saveTokenToSupabase(token);
-        }
-      })
-      .catch(err => console.warn('Push notification registration failed:', err));
+    // Delay initialization to prevent collision with location permission requests
+    const initTimer = setTimeout(() => {
+      registerForPushNotificationsAsync()
+        .then(token => {
+          if (token) {
+            setExpoPushToken(token);
+            saveTokenToSupabase(token);
+          }
+        })
+        .catch(err => console.warn('Push notification registration failed:', err));
 
-    notificationListener.current = Notifications.addNotificationReceivedListener(n => {
-      setNotification(n);
-    });
+      notificationListener.current = Notifications.addNotificationReceivedListener(n => {
+        setNotification(n);
+      });
 
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('Notification Response:', response);
-    });
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+        console.log('Notification Response:', response);
+      });
+    }, 2000); // 2 second delay
 
     return () => {
+      clearTimeout(initTimer);
       if (notificationListener.current) notificationListener.current.remove();
       if (responseListener.current) responseListener.current.remove();
     };

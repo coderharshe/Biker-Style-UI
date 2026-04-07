@@ -6,8 +6,8 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "motosphere",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -17,35 +17,26 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.harsh.motosphere",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Motosphere uses your location to discover nearby riders and navigate our beautiful routes.",
+        "NSLocationWhenInUseUsageDescription": "Motosphere uses your location to discover nearby riders and navigate routes.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "To track your ride accurately and provide proximity alerts, Motosphere needs background location access.",
         "UIBackgroundModes": [
           "location",
           "fetch",
           "remote-notification"
         ]
-      },
-      "config": {
-        "googleMapsApiKey": "YOUR_IOS_API_KEY_HERE"
       }
     },
     "android": {
       "package": "com.harsh.motosphere",
+      "versionCode": 1,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "ACCESS_BACKGROUND_LOCATION",
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_LOCATION",
-        "WAKE_LOCK",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "WAKE_LOCK"
       ],
-      "config": {
-        "googleMaps": {
-          "apiKey": "YOUR_ANDROID_API_KEY_HERE"
-        }
-      },
       "adaptiveIcon": {
         "backgroundColor": "#0B0B0B",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
@@ -59,7 +50,7 @@
       [
         "expo-router",
         {
-          "origin": "https://replit.com/"
+          "origin": "https://motosphere.app/"
         }
       ],
       "expo-font",
@@ -67,16 +58,26 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Motosphere to use your location."
+          "locationAlwaysAndWhenInUsePermission": "Allow Motosphere to use your location.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ],
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/android-icon-monochrome.png",
+          "color": "#FF6B2C"
+        }
+      ],
       [
         "expo-build-properties",
         {
           "android": {
             "enableProguardInReleaseBuilds": true,
             "minSdkVersion": 24,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
             "extraMavenRepos": [
               "https://maven.google.com"
             ]
@@ -85,12 +86,11 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     },
     "extra": {
       "router": {
-        "origin": "https://replit.com/"
+        "origin": "https://motosphere.app/"
       },
       "eas": {
         "projectId": "4668c693-fba4-4bad-b98c-dedc0878d69b"

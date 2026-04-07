@@ -1,6 +1,4 @@
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
-import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
 import { BlurView } from "expo-blur";
 import { Platform, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -10,34 +8,7 @@ import React from "react";
 import Colors from "@/constants/colors";
 import LogoHeader from "@/components/LogoHeader";
 
-function NativeTabLayout() {
-  return (
-    <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Home</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="community">
-        <Icon sf={{ default: "person.3", selected: "person.3.fill" }} />
-        <Label>Community</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="tasks">
-        <Icon sf={{ default: "target", selected: "target" }} />
-        <Label>Tasks</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="leaderboard">
-        <Icon sf={{ default: "trophy", selected: "trophy.fill" }} />
-        <Label>Ranks</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="profile">
-        <Icon sf={{ default: "person", selected: "person.fill" }} />
-        <Label>Profile</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-  );
-}
-
-function ClassicTabLayout() {
+export default function TabLayout() {
   const isWeb = Platform.OS === "web";
   const isIOS = Platform.OS === "ios";
   const safeAreaInsets = useSafeAreaInsets();
@@ -126,11 +97,4 @@ function ClassicTabLayout() {
       />
     </Tabs>
   );
-}
-
-export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
-  return <ClassicTabLayout />;
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 
@@ -22,15 +23,17 @@ export function usePushNotifications() {
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then(token => {
+    registerForPushNotificationsAsync()
+      .then(token => {
         if (token) {
-            setExpoPushToken(token);
-            saveTokenToSupabase(token);
+          setExpoPushToken(token);
+          saveTokenToSupabase(token);
         }
-    });
+      })
+      .catch(err => console.warn('Push notification registration failed:', err));
 
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      setNotification(notification);
+    notificationListener.current = Notifications.addNotificationReceivedListener(n => {
+      setNotification(n);
     });
 
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
@@ -44,17 +47,21 @@ export function usePushNotifications() {
   }, []);
 
   const saveTokenToSupabase = async (token: string) => {
+    try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { error } = await supabase
-          .from('user_push_tokens')
-          .upsert({ 
-              user_id: user.id, 
-              expo_push_token: token 
-          }, { onConflict: 'expo_push_token' });
+        .from('user_push_tokens')
+        .upsert({ 
+          user_id: user.id, 
+          expo_push_token: token 
+        }, { onConflict: 'expo_push_token' });
       
       if (error) console.error('Error saving push token:', error);
+    } catch (err) {
+      console.error('Error saving push token:', err);
+    }
   };
 
   return { expoPushToken, notification };
@@ -64,7 +71,9 @@ async function registerForPushNotificationsAsync() {
   if (Platform.OS === 'web') {
     return;
   }
+
   let token;
+
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
       name: 'default',
@@ -86,8 +95,13 @@ async function registerForPushNotificationsAsync() {
       return;
     }
     
-    // Replace with your project ID from Expo dashboard
-    token = (await Notifications.getExpoPushTokenAsync()).data;
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    if (!projectId) {
+      console.warn('No EAS projectId found — push tokens unavailable');
+      return;
+    }
+
+    token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
   } else {
     console.warn('Must use physical device for Push Notifications');
   }

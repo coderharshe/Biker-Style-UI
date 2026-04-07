@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 
@@ -34,16 +35,22 @@ export function useLocation(rideId?: string | null) {
   // Background Task Management
   const startBackgroundTracking = async () => {
     if (Platform.OS === 'web') return;
+    
+    // Store for background task to pick up
+    if (rideId) {
+      await AsyncStorage.setItem('active_ride_id', rideId);
+    }
+    
     const isRegistered = await Location.hasStartedLocationUpdatesAsync(LOCATION_TRACKING_TASK);
     if (!isRegistered) {
       await Location.startLocationUpdatesAsync(LOCATION_TRACKING_TASK, {
         accuracy: Location.Accuracy.BestForNavigation,
-        timeInterval: 5000,
+        timeInterval: 10000, // 10 seconds to save battery in background
         distanceInterval: 10,
         foregroundService: {
-          notificationTitle: 'Ride Tracking Active',
-          notificationBody: 'Motosphere is tracking your ride in the background.',
-          notificationColor: '#00FF00',
+          notificationTitle: 'Motosphere Tracking',
+          notificationBody: 'Tracking your ride in the background...',
+          notificationColor: '#FF6B2C', // Brand color
         },
         pausesUpdatesAutomatically: false,
       });
@@ -52,6 +59,7 @@ export function useLocation(rideId?: string | null) {
 
   const stopBackgroundTracking = async () => {
     if (Platform.OS === 'web') return;
+    await AsyncStorage.removeItem('active_ride_id');
     const isRegistered = await Location.hasStartedLocationUpdatesAsync(LOCATION_TRACKING_TASK);
     if (isRegistered) {
       await Location.stopLocationUpdatesAsync(LOCATION_TRACKING_TASK);

@@ -81,8 +81,8 @@
           "android": {
             "enableProguardInReleaseBuilds": false,
             "minSdkVersion": 29,
-            "compileSdkVersion": 35,
-            "targetSdkVersion": 35,
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
             "extraMavenRepos": [
               "https://maven.google.com"
             ]

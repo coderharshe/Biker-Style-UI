@@ -1,63 +1,109 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import * as Location from 'expo-location';
+import { Alert } from 'react-native';
 
 export function useSOS() {
   const [activeSOS, setActiveSOS] = useState<any[]>([]);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
     fetchActiveSOS();
 
-    const channelName = `sos-alerts-realtime-${Math.random()}`;
+    const channelName = `sos-alerts-realtime-${Date.now()}`;
     const channel = supabase
       .channel(channelName)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'sos_alerts' },
         () => {
-          fetchActiveSOS();
+          if (isMountedRef.current) {
+            fetchActiveSOS();
+          }
         }
       )
       .subscribe();
 
     return () => {
-        supabase.removeChannel(channel);
+      isMountedRef.current = false;
+      supabase.removeChannel(channel);
     };
   }, []);
 
   const fetchActiveSOS = async () => {
-    const { data } = await supabase
-      .from('sos_alerts')
-      .select('*, profiles(username)')
-      .eq('status', 'active');
-    
-    if (data) setActiveSOS(data);
+    try {
+      const { data, error } = await supabase
+        .from('sos_alerts')
+        .select('*, profiles(username)')
+        .eq('status', 'active');
+
+      if (error) {
+        console.warn('[SOS] Fetch error:', error.message);
+        return;
+      }
+
+      if (data && isMountedRef.current) {
+        setActiveSOS(data);
+      }
+    } catch (err) {
+      console.warn('[SOS] Fetch error:', err);
+    }
   };
 
   const triggerSOS = async (rideId?: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('You must be logged in to trigger SOS.');
+      }
 
-    const loc = await Location.getCurrentPositionAsync({});
-    
-    const { error } = await supabase.from('sos_alerts').insert({
-      user_id: user.id,
-      ride_id: rideId,
-      lat: loc.coords.latitude,
-      lng: loc.coords.longitude,
-      status: 'active'
-    });
+      // Get location with timeout fallback
+      let loc: Location.LocationObject | null = null;
+      try {
+        loc = await Promise.race([
+          Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+          new Promise<null>((_, reject) =>
+            setTimeout(() => reject(new Error('Location timeout')), 10_000)
+          ),
+        ]);
+      } catch {
+        // Fallback: try last known location
+        loc = await Location.getLastKnownPositionAsync().catch(() => null);
+      }
 
-    if (error) throw error;
+      if (!loc) {
+        Alert.alert('Location Unavailable', 'Could not determine your location for the SOS alert. Please enable location services.');
+        return;
+      }
+
+      const { error } = await supabase.from('sos_alerts').insert({
+        user_id: user.id,
+        ride_id: rideId ?? null,
+        lat: loc.coords.latitude,
+        lng: loc.coords.longitude,
+        status: 'active',
+      });
+
+      if (error) throw error;
+    } catch (err) {
+      console.error('[SOS] Trigger error:', err);
+      throw err;
+    }
   };
 
   const resolveSOS = async (sosId: string) => {
-    const { error } = await supabase
-      .from('sos_alerts')
-      .update({ status: 'resolved' })
-      .eq('id', sosId);
-    
-    if (error) throw error;
+    try {
+      const { error } = await supabase
+        .from('sos_alerts')
+        .update({ status: 'resolved' })
+        .eq('id', sosId);
+      
+      if (error) throw error;
+    } catch (err) {
+      console.error('[SOS] Resolve error:', err);
+      throw err;
+    }
   };
 
   return { activeSOS, triggerSOS, resolveSOS };

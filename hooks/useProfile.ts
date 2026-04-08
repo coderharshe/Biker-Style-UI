@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useStore } from './useStore';
 
@@ -6,19 +6,27 @@ export function useProfile() {
   const { profile, setProfile } = useStore();
   const [loading, setLoading] = useState(!profile);
   const [error, setError] = useState<any>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    let isMounted = true;
+    isMountedRef.current = true;
+
     const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session && isMounted) {
-        fetchProfile();
-      } else if (isMounted) {
-        setLoading(false);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && isMountedRef.current) {
+          fetchProfile();
+        } else if (isMountedRef.current) {
+          setLoading(false);
+        }
+      } catch (err) {
+        console.warn('[Profile] Session check error:', err);
+        if (isMountedRef.current) setLoading(false);
       }
     };
+
     load();
-    return () => { isMounted = false; };
+    return () => { isMountedRef.current = false; };
   }, []);
 
   const fetchProfile = async (retryCount = 0) => {
@@ -26,30 +34,36 @@ export function useProfile() {
       if (!profile) setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        setLoading(false);
+        if (isMountedRef.current) setLoading(false);
         return;
       }
 
-      const { data, error } = await supabase.from('profiles')
+      const { data, error: fetchError } = await supabase.from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      if (error) {
+      if (fetchError) {
         // If it's a new user, the profile might still be being created by the trigger
         if (retryCount < 3) {
-          setTimeout(() => fetchProfile(retryCount + 1), 1000);
+          setTimeout(() => {
+            if (isMountedRef.current) fetchProfile(retryCount + 1);
+          }, 1000);
           return;
         }
-        throw error;
+        throw fetchError;
       }
       
-      setProfile(data);
+      if (isMountedRef.current) {
+        setProfile(data);
+      }
     } catch (e) {
-      setError(e);
-      console.error('Error fetching profile:', e);
+      if (isMountedRef.current) {
+        setError(e);
+      }
+      console.error('[Profile] Error fetching:', e);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
   };
 

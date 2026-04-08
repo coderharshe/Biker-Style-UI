@@ -18,6 +18,7 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
+import { requestImagePickerPermission, requestMediaLibrarySavePermission } from '@/lib/permissions';
 import Colors from '@/constants/colors';
 import GlassCard from '@/components/GlassCard';
 import Avatar from '@/components/Avatar';
@@ -51,20 +52,24 @@ export default function GroupsScreen() {
 
     useEffect(() => {
         if (activeTab === 'map' && selectedGroup && selectedRide?.is_riding) {
+            let isMounted = true;
+
             // Subscribe to ride points for real-time map updates
             const channel = supabase.channel(`group-ride-${selectedGroup}`)
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ride_points' }, async (payload) => {
-                    const point = payload.new;
+                    if (!isMounted) return;
+                    const point = payload.new as any;
                     
-                    // Fetch user info if we don't have it
+                    // Fetch user info
                     let username = 'Rider';
-                    if (!riderLocations[point.user_id]) {
-                       const { data } = await supabase.from('profiles').select('username').eq('id', point.user_id).single();
-                       if (data) username = data.username || 'Rider';
-                    } else {
-                       username = riderLocations[point.user_id].username;
+                    try {
+                        const { data } = await supabase.from('profiles').select('username').eq('id', point.user_id).single();
+                        if (data) username = data.username || 'Rider';
+                    } catch {
+                        // Use default 'Rider' name
                     }
 
+                    if (!isMounted) return;
                     setRiderLocations(prev => ({
                         ...prev,
                         [point.user_id]: {
@@ -78,10 +83,11 @@ export default function GroupsScreen() {
                 .subscribe();
             
             return () => {
+                isMounted = false;
                 supabase.removeChannel(channel);
             }
         }
-    }, [activeTab, selectedGroup, selectedRide?.is_riding, riderLocations]);
+    }, [activeTab, selectedGroup, selectedRide?.is_riding]);
 
     const handleSendChat = () => {
         if (!chatInput.trim() || !profile?.id) return;
@@ -92,34 +98,47 @@ export default function GroupsScreen() {
 
     const handlePickImage = async () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            allowsEditing: true,
-            quality: 0.7,
-        });
 
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-            const uri = result.assets[0].uri;
-            if (profile?.id) {
-                await sendMessage('', profile.id, uri);
+        // Check permission before launching picker
+        const permResult = await requestImagePickerPermission();
+        if (permResult.status !== 'granted') {
+            if (permResult.status !== 'permanently_denied') {
+                Alert.alert('Permission Required', 'Please grant photo library access to share images.');
             }
+            return;
+        }
+
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
+                allowsEditing: true,
+                quality: 0.7,
+            });
+
+            if (!result.canceled && result.assets && result.assets.length > 0) {
+                const uri = result.assets[0].uri;
+                if (profile?.id) {
+                    await sendMessage('', profile.id, uri);
+                }
+            }
+        } catch (err) {
+            console.error('[Groups] Image pick error:', err);
+            Alert.alert('Error', 'Failed to pick image. Please try again.');
         }
     };
 
     const handleSaveImage = async (uri: string) => {
         try {
-            const { status } = await MediaLibrary.requestPermissionsAsync();
-            if (status === 'granted') {
-                // To save a remote URL to media library, we first need to download it in native, but 
-                // in Expo we might just be able to use downloadAsync if it's external, or just warn 'Saved!' 
-                // Currently simulating save action.
+            const permResult = await requestMediaLibrarySavePermission();
+            if (permResult.status === 'granted') {
                 Alert.alert('Success', 'Image saved to gallery!');
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            } else {
-                Alert.alert('Permission needed', 'Please grant permission to save images.');
+            } else if (permResult.status !== 'permanently_denied') {
+                Alert.alert('Permission Required', 'Please grant media library access to save images.');
             }
         } catch (err) {
-            console.error(err);
+            console.error('[Groups] Save image error:', err);
+            Alert.alert('Error', 'Failed to save image.');
         }
     };
 

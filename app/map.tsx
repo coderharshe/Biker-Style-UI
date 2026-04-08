@@ -79,7 +79,7 @@ export default function MapScreen() {
     const [routeCoords, setRouteCoords] = useState<RoutePoint[]>([]);
 
     useEffect(() => {
-        if (location) {
+        if (location?.coords) {
             // Destination (In production, this would be dynamic via group info)
             const destination = { latitude: 34.1842, longitude: 77.6048 };
             
@@ -91,9 +91,11 @@ export default function MapScreen() {
                 { latitude: location.coords.latitude, longitude: location.coords.longitude },
                 destination,
                 finalKey
-            ).then(setRouteCoords);
+            )
+              .then(setRouteCoords)
+              .catch((err) => console.warn('[Map] Route fetch error:', err));
         }
-    }, [location?.coords.latitude, location?.coords.longitude]);
+    }, [location?.coords?.latitude, location?.coords?.longitude]);
 
     // For iOS, we default to Apple Maps if no Google key is provided to avoid crashes/blank maps.
     // For Android, only use Google Maps if a valid API key is configured.

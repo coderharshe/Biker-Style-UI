@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { StatusBar } from "expo-status-bar";
+import { Platform, LogBox } from "react-native";
 import {
   useFonts,
   Rajdhani_400Regular,
@@ -14,8 +15,29 @@ import {
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import "@/lib/locationTask";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useNetworkMonitor } from "@/lib/networkMonitor";
 
 SplashScreen.preventAutoHideAsync();
+
+// ─── Global Unhandled Promise Rejection Handler ────────
+// Prevents crashes from fire-and-forget promises across the app
+if (Platform.OS !== 'web') {
+  const originalHandler = (globalThis as any).ErrorUtils?.getGlobalHandler?.();
+
+  if ((globalThis as any).ErrorUtils) {
+    (globalThis as any).ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
+      console.error(`[GlobalError] ${isFatal ? 'FATAL' : 'Non-fatal'}:`, error?.message);
+      if (isFatal && originalHandler) {
+        originalHandler(error, isFatal);
+      }
+    });
+  }
+}
+
+// Suppress known non-critical warnings in production
+if (!__DEV__) {
+  LogBox.ignoreAllLogs(true);
+}
 
 function RootLayoutNav() {
   return (
@@ -43,6 +65,7 @@ export default function RootLayout() {
   });
   
   usePushNotifications();
+  useNetworkMonitor();
 
   useEffect(() => {
     if (fontsLoaded) {

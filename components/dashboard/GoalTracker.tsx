@@ -14,7 +14,7 @@ export default function GoalTracker({ currentKm, goalKm }: GoalTrackerProps) {
 
   useEffect(() => {
     goalProgress.value = withTiming(currentKm / goalKm, { duration: 1200, easing: Easing.out(Easing.cubic) });
-  }, [currentKm, goalKm]);
+  }, [currentKm, goalKm, goalProgress]);
 
   const goalBarStyle = useAnimatedStyle(() => ({
     width: `${goalProgress.value * 100}%`,
@@ -29,7 +29,7 @@ export default function GoalTracker({ currentKm, goalKm }: GoalTrackerProps) {
           <Text style={styles.kmValue}>
             {currentKm} <Text style={styles.kmUnit}>/ {goalKm} KM</Text>
           </Text>
-          <Text style={styles.label}>Today's Ride Goal</Text>
+          <Text style={styles.label}>Today&apos;s Ride Goal</Text>
         </View>
         <Text style={styles.percentText}>{percent}%</Text>
       </View>

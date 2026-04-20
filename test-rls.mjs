@@ -15,7 +15,7 @@ const supabase = createClient(env.EXPO_PUBLIC_SUPABASE_URL, env.EXPO_PUBLIC_SUPA
 
 async function runTests() {
     console.log("=========================================");
-    console.log("Running Motosphere RLS Security Tests");
+    console.log("Running Velox RLS Security Tests");
     console.log("=========================================\n");
     
     // Login

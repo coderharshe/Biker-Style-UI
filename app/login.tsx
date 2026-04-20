@@ -9,6 +9,7 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -294,7 +295,7 @@ export default function LoginScreen() {
       </Pressable>
 
       <View style={styles.resendRow}>
-        <Text style={styles.resendLabel}>Didn't get the code?</Text>
+        <Text style={styles.resendLabel}>Didn&apos;t get the code?</Text>
         <Pressable onPress={handleResendOtp} disabled={resendCooldown > 0 || loading}>
           <Text
             style={[
@@ -476,7 +477,11 @@ export default function LoginScreen() {
       >
         <View style={styles.header}>
           <View style={styles.logoCircle}>
-            <Feather name="shield" size={32} color={Colors.dark.accent} />
+            <Image 
+              source={require('@/assets/images/velox_logo.png')} 
+              style={{ width: 40, height: 40 }}
+              resizeMode="contain"
+            />
           </View>
           <Text style={styles.title}>VELOX</Text>
           <Text style={styles.subtitle}>{subtitle}</Text>

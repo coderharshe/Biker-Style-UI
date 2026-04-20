@@ -31,6 +31,11 @@ import { useSOS } from '@/hooks/useSOS';
 import { useProximityAlerts } from '@/hooks/useProximityAlerts';
 import { useRide } from '@/hooks/useRide';
 import Constants from 'expo-constants';
+import { useWeather } from '@/hooks/useWeather';
+import { useMissions } from '@/hooks/useMissions';
+import { getLevelInfo } from '@/utils/leveling';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { useCommunityPulse } from '@/hooks/useCommunityPulse';
 
 // Modular Dashboard Components
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -71,9 +76,15 @@ export default function HomeScreen() {
   const { activeRideId, startRide, endRide, loading: rideLoading } = useRide();
   const { location, currentDistance } = useLocation(activeRideId); 
   const { riderLocations } = useRiderLocations(); 
-  const { activeSOS } = useSOS(); 
+  const { activeSOS, sosStats } = useSOS(); 
   useProximityAlerts(); 
   
+  const { conditions: weatherConditions } = useWeather(location?.coords.latitude, location?.coords.longitude);
+  const { missions } = useMissions();
+  const levelInfo = getLevelInfo(profile?.xp || 0);
+  const { analytics } = useAnalytics();
+  const { feed } = useCommunityPulse();
+
   const d = dashboardData;
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
   const [showPicker, setShowPicker] = useState(false);
@@ -108,7 +119,7 @@ export default function HomeScreen() {
           goalKm={d.goalKM} 
         />
 
-        <RideConditionCard conditions={d.rideConditions} />
+        <RideConditionCard conditions={{ ...d.rideConditions, ...weatherConditions }} />
 
         <GlassCard style={{ padding: 0 }} noPadding>
           <View style={styles.mapContainer}>
@@ -193,8 +204,8 @@ export default function HomeScreen() {
               </MapView>
 
               <View style={styles.chipRow}>
-                <FloatingChip icon="users" label="Riders" value={d.mapData.nearbyRiders} color={Colors.dark.accent} />
-                <FloatingChip icon="alert-triangle" label="SOS" value={d.mapData.activeSOS} color={Colors.dark.sos} />
+                <FloatingChip icon="users" label="Riders" value={riderLocations.length.toString()} color={Colors.dark.accent} />
+                <FloatingChip icon="alert-triangle" label="SOS" value={activeSOS.length.toString()} color={Colors.dark.sos} />
                 <FloatingChip icon="navigation" label="Rides" value={d.mapData.groupRidesActive} color={Colors.dark.secondary} />
               </View>
 
@@ -250,25 +261,25 @@ export default function HomeScreen() {
           <View style={styles.sosStatsRow}>
             <View style={styles.sosStat}>
               <Feather name="clock" size={14} color={Colors.dark.sos} />
-              <Text style={styles.sosStatVal}>{d.sosPanel.avgResponseTime}</Text>
+              <Text style={styles.sosStatVal}>{sosStats.avgResponseTime}</Text>
               <Text style={styles.sosStatLabel}>Avg Response</Text>
             </View>
             <View style={styles.sosDivider} />
             <View style={styles.sosStat}>
               <Feather name="users" size={14} color={Colors.dark.success} />
-              <Text style={styles.sosStatVal}>{d.sosPanel.availableHelpers}</Text>
+              <Text style={styles.sosStatVal}>{sosStats.availableHelpers.toString()}</Text>
               <Text style={styles.sosStatLabel}>Available Now</Text>
             </View>
           </View>
         </View>
 
-        <BikeHealthCard analytics={d.analytics} />
+        <BikeHealthCard analytics={analytics.weeklyKM > 0 || analytics.rideHours > 0 ? analytics : d.analytics} />
 
         <MissionTracker 
-          xp={profile?.xp || 0} 
-          nextLevelXP={d.gamification.nextLevelXP} 
-          levelTitle={d.gamification.levelTitle} 
-          missions={d.gamification.todayMissions} 
+          xp={levelInfo.currentXp} 
+          nextLevelXP={levelInfo.nextLevelXP} 
+          levelTitle={levelInfo.title} 
+          missions={missions.length ? missions as any : d.gamification.todayMissions} 
         />
 
         <View style={styles.sectionHeader}>
@@ -276,7 +287,7 @@ export default function HomeScreen() {
         </View>
 
         <FlatList
-          data={d.communityFeed}
+          data={feed.length > 0 ? feed : d.communityFeed}
           horizontal
           showsHorizontalScrollIndicator={false}
           keyExtractor={item => item.id}

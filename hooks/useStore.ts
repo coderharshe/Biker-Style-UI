@@ -30,7 +30,7 @@ interface AppState {
  */
 export const useStore = create<AppState>()(
     persist(
-        (set: (state: Partial<AppState> | ((state: AppState) => Partial<AppState>)) => void) => ({
+        (set) => ({
             profile: null,
             activeRideId: null,
             isOffline: false,

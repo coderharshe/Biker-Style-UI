@@ -478,7 +478,7 @@ export default function LoginScreen() {
           <View style={styles.logoCircle}>
             <Feather name="shield" size={32} color={Colors.dark.accent} />
           </View>
-          <Text style={styles.title}>MOTOSPHERE</Text>
+          <Text style={styles.title}>VELOX</Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
         </View>
 

@@ -50,7 +50,7 @@ export function useLocation(rideId?: string | null) {
           timeInterval: 10000,
           distanceInterval: 10,
           foregroundService: {
-            notificationTitle: 'Motosphere Tracking',
+            notificationTitle: 'Velox Tracking',
             notificationBody: 'Tracking your ride in the background...',
             notificationColor: '#FF6B2C',
           },

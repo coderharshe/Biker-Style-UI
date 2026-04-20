@@ -76,14 +76,14 @@ export default function SplashScreen() {
       <View style={styles.content}>
         <Animated.View style={[styles.logoWrap, logoAnimStyle]}>
           <Image
-            source={require('@/assets/images/logo_moto.jpeg')}
+            source={require('@/assets/images/velox_logo.png')}
             style={styles.splashLogo}
             resizeMode="contain"
           />
         </Animated.View>
 
         <Animated.View style={taglineAnimStyle}>
-          <Text style={styles.appName}>MOTOSPHERE</Text>
+          <Text style={styles.appName}>VELOX</Text>
           <Text style={styles.tagline}>Ride Alone. Explore Together.</Text>
         </Animated.View>
       </View>

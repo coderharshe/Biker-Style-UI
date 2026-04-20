@@ -1,5 +1,5 @@
 /**
- * Network state monitor for Motosphere.
+ * Network state monitor for Velox.
  * Keeps Zustand store in sync with device connectivity.
  */
 

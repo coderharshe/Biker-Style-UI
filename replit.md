@@ -1,8 +1,8 @@
-# Motosphere - Replit Configuration
+# Velox - Replit Configuration
 
 ## Overview
 
-Motosphere is a biker community and safety platform built as a mobile-first application using React Native with Expo. It connects bikers through group ride coordination, SOS emergency alerts, gamified exploration tasks, and a leaderboard system. The app features a dark theme with glassmorphism UI, neon orange/electric blue accents, and uses primarily mock data with local state management. The backend is a lightweight Express server with PostgreSQL database support via Drizzle ORM, though most app functionality currently runs client-side with AsyncStorage.
+Velox is a biker community and safety platform built as a mobile-first application using React Native with Expo. It connects bikers through group ride coordination, SOS emergency alerts, gamified exploration tasks, and a leaderboard system. The app features a dark theme with glassmorphism UI, neon orange accents, and uses Supabase for backend services.
 
 ## User Preferences
 

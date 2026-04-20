@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Motosphere",
-    "slug": "motosphere",
+    "name": "Velox",
+    "slug": "velox",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "motosphere",
+    "scheme": "velox",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
@@ -15,10 +15,10 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.harsh.motosphere",
+      "bundleIdentifier": "com.harsh.velox",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Motosphere uses your location to discover nearby riders and navigate routes.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "To track your ride accurately and provide proximity alerts, Motosphere needs background location access.",
+        "NSLocationWhenInUseUsageDescription": "Velox uses your location to discover nearby riders and navigate routes.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "To track your ride accurately and provide proximity alerts, Velox needs background location access.",
         "UIBackgroundModes": [
           "location",
           "fetch",
@@ -27,7 +27,7 @@
       }
     },
     "android": {
-      "package": "com.harsh.motosphere",
+      "package": "com.harsh.velox",
       "versionCode": 1,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
@@ -55,7 +55,7 @@
       [
         "expo-router",
         {
-          "origin": "https://motosphere.app/"
+          "origin": "https://velox.app/"
         }
       ],
       "expo-font",
@@ -63,7 +63,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Motosphere to use your location.",
+          "locationAlwaysAndWhenInUsePermission": "Allow Velox to use your location.",
           "isAndroidBackgroundLocationEnabled": true,
           "isAndroidForegroundServiceEnabled": true
         }
@@ -93,9 +93,15 @@
     "experiments": {
       "typedRoutes": true
     },
+    "updates": {
+      "url": "https://u.expo.dev/4668c693-fba4-4bad-b98c-dedc0878d69b"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "extra": {
       "router": {
-        "origin": "https://motosphere.app/"
+        "origin": "https://velox.app/"
       },
       "eas": {
         "projectId": "4668c693-fba4-4bad-b98c-dedc0878d69b"

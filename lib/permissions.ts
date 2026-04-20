@@ -1,5 +1,5 @@
 /**
- * Unified permission manager for Motosphere.
+ * Unified permission manager for Velox.
  * Handles all platform permission flows with proper fallbacks.
  */
 
@@ -28,7 +28,7 @@ function openAppSettings(): void {
 function showSettingsAlert(permissionName: string): void {
   Alert.alert(
     `${permissionName} Permission Required`,
-    `Motosphere needs ${permissionName.toLowerCase()} access to work properly. Please enable it in your device settings.`,
+    `Velox needs ${permissionName.toLowerCase()} access to work properly. Please enable it in your device settings.`,
     [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Open Settings', onPress: openAppSettings },

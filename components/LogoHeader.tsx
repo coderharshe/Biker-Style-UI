@@ -8,11 +8,11 @@ export default function LogoHeader() {
         <View style={[styles.container, { paddingTop: insets.top + (Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0) }]}>
             <View style={styles.headerRow}>
                 <Image
-                    source={require('@/assets/images/logo_moto.jpeg')}
+                    source={require('@/assets/images/velox_logo.png')}
                     style={styles.logo}
                     resizeMode="contain"
                 />
-                <Text style={styles.headerTitle}>MOTOSPHERE</Text>
+                <Text style={styles.headerTitle}>VELOX</Text>
             </View>
         </View>
     );

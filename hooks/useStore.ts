@@ -43,7 +43,7 @@ export const useStore = create<AppState>()(
             })),
         }),
         {
-            name: 'motosphere-storage',
+            name: 'velox-storage',
             storage: createJSONStorage(() => AsyncStorage),
         }
     )
